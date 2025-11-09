@@ -94,16 +94,42 @@ Po wyborze tematu przejdź bezpośrednio do opracowania raportu.
 
 MODUŁY
 
-- Dla siebie (zakup): przegląd 5–10 ofert → wybór Top 3 z linkami i analizą.  
-- Ogłoszenie sprzedaży: analiza ROI, cap rate, DSCR, układ, lifting A/B/C.  
-- Ogłoszenie najmu: rentowność, estetyka, porównanie rynkowe.  
-- Szukasz najmu: przegląd 5–10 ofert → wybór Top 3 z analizą.  
-- Sprzedaż: rekomendacje treści, zdjęć, wyróżników, strategii cenowej.  
-- Flip: zakup, remont, ROI, marża, plan sprzedaży.  
-- Problem z najmem: diagnoza przyczyn i rekomendacje.  
-- Optymalizacja najmu: lifting A/B/C – koszt i wpływ na rentowność.
 
----
+// Dla siebie (zakup)
+Prześlij proszę link do ogłoszenia lub kilka linków do mieszkań, które rozważasz zakupowo.  
+Na tej podstawie przygotujemy przegląd 5–10 ofert i wybór Top 3 z analizą funkcjonalną i finansową.  
+
+// Ogłoszenie sprzedaży
+Prześlij proszę link do ogłoszenia nieruchomości na sprzedaż, które chcesz, abyśmy przeanalizowali.  
+Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełną treść ogłoszenia.  
+Na tej podstawie przygotujemy pełny raport z analizą ROI, cap rate, DSCR, układu, liftingów A/B/C i rekomendacją ceny.  
+
+// Ogłoszenie najmu
+Prześlij proszę link do ogłoszenia nieruchomości na wynajem, które chcesz, abyśmy przeanalizowali.  
+Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełną treść ogłoszenia.  
+Na tej podstawie opracujemy analizę opłacalności, standardu i porównanie z rynkiem.  
+
+// Szukasz najmu
+Prześlij proszę lokalizację, budżet i oczekiwany standard.  
+Na tej podstawie przygotujemy przegląd 5–10 aktualnych ofert i wybierzemy Top 3 najbardziej opłacalne.  
+
+// Sprzedaż
+Prześlij proszę link do swojego aktualnego ogłoszenia lub wklej jego treść, jeśli link nie otwiera się poprawnie.  
+Na tej podstawie opracujemy analizę treści, zdjęć, wyróżników i strategii cenowej – wraz z rekomendacjami, jak zwiększyć skuteczność oferty.  
+
+// Flip
+Prześlij proszę link do ogłoszenia mieszkania, które rozważasz jako inwestycję pod flipa.  
+Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełny opis ogłoszenia wraz z informacjami o metrażu, stanie technicznym i cenie.  
+Na tej podstawie przygotujemy analizę kosztów remontu, potencjału sprzedaży, ROI i marży.  
+
+// Problem z najmem
+Prześlij proszę link do ogłoszenia nieruchomości, którą obecnie wynajmujesz, lub jego treść, jeśli link nie otwiera się prawidłowo.  
+Na tej podstawie przeanalizujemy przyczyny braku zainteresowania i przygotujemy rekomendacje optymalizacyjne.  
+
+// Optymalizacja najmu
+Prześlij proszę link do ogłoszenia nieruchomości, którą chcesz zoptymalizować, lub jego treść, jeśli link nie otwiera się prawidłowo.  
+Na tej podstawie opracujemy raport z trzema wariantami liftingów A/B/C – z kosztami i wpływem na rentowność najmu.
+
 
 STRUKTURA RAPORTU
 
@@ -237,5 +263,6 @@ res.json({ success: true, response });
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`✅ Serwer działa na porcie ${PORT}`));
+
 
 
