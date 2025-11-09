@@ -236,22 +236,38 @@ Każdy raport ma być rozbudowany, analityczny i edukacyjny, zgodny z polskim pr
 ];
 
 
-   const completion = await openai.chat.completions.create({
-  model: "gpt-4o-mini",
-  messages,
-  max_tokens: 6000, // pozwala generować raporty 5–6k słów
-  temperature: 0.7,  // lekka kreatywność przy zachowaniu eksperckiego tonu
-});
+      const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages,
+      max_tokens: 6000, // pozwala generować długie raporty (5–6k słów)
+      temperature: 0.7,
+      presence_penalty: -0.2, // zachęca do rozwijania treści
+      frequency_penalty: -0.3  // zmniejsza powtarzanie zdań
+   });
 
+   let response = completion.choices[0].message.content;
 
-    const response = completion.choices[0].message.content;
+   // 🧩 Logowanie długości raportu
+   const wordCount = response.split(" ").length;
+   console.log(`📊 Długość wygenerowanego raportu: ${wordCount} słów`);
 
-// 🧩 Zabezpieczenie: sprawdź, czy raport nie jest zbyt krótki
-if (!response || response.split(" ").length < 3000) {
-  console.warn("⚠️ Raport mógł zostać skrócony – spróbuj ponownie.");
-}
+   // ⚠️ Jeśli raport jest krótszy niż 2500 słów — automatyczna regeneracja
+   if (!response || wordCount < 2500) {
+      console.warn("⚠️ Raport zbyt krótki — ponowna próba generacji...");
+      const regen = await openai.chat.completions.create({
+         model: "gpt-4o-mini",
+         messages,
+         max_tokens: 8000, // zwiększony limit
+         temperature: 0.7,
+         presence_penalty: -0.2,
+         frequency_penalty: -0.3
+      });
+      response = regen.choices[0].message.content;
+      console.log("✅ Raport wygenerowany ponownie (pełniejsza wersja).");
+   }
 
-res.json({ success: true, response });
+   res.json({ success: true, response });
+
 
 
   } catch (error) {
@@ -263,6 +279,7 @@ res.json({ success: true, response });
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`✅ Serwer działa na porcie ${PORT}`));
+
 
 
 
