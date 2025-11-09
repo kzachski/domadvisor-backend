@@ -9,7 +9,9 @@ dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+// Zwiększamy limit danych w żądaniu (historia + długi tekst)
+app.use(bodyParser.json({ limit: "2mb" }));
+
 
 // 🔑 Klucz API pobierany z ENV (Render / plik .env)
 const openai = new OpenAI({
@@ -271,6 +273,10 @@ const completion = await openai.chat.completions.create({
 let response = completion.choices?.[0]?.message?.content || "";
 
 const wordCount = response.split(" ").length;
+console.log("📊 Liczba słów:", wordCount);
+console.log("📏 Długość raportu (znaki):", response.length);
+console.log("🕒 Czas generacji zakończony – przygotowuję podział...");
+    
 console.log(`📊 Długość wygenerowanego raportu: ${wordCount} słów`);
 
 if (wordCount < 4000) {
@@ -291,8 +297,12 @@ if (wordCount < 4000) {
 const parts = splitReportIntoParts(response, 7000);
 console.log(`📦 Raport podzielony na ${parts.length} części`);
 
-// 🟢 Wysyłamy raport do frontendu w częściach:
-res.json({ success: true, parts });
+// ✂️ Przycinamy części, żeby nie przekroczyć limitu JSON na Render
+const safeParts = parts.map(p => p.slice(0, 6000));
+
+// 🟢 Wysyłamy raport do frontendu
+res.json({ success: true, parts: safeParts });
+
 
 } catch (error) {
   console.error("Błąd API:", error);
@@ -304,6 +314,7 @@ res.json({ success: true, parts });
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`✅ Serwer działa na porcie ${PORT}`));
+
 
 
 
