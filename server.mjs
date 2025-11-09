@@ -4,15 +4,13 @@ import bodyParser from "body-parser";
 import OpenAI from "openai";
 import dotenv from "dotenv";
 
-// Załaduj zmienne środowiskowe z pliku .env (lokalnie) lub z Render Environment
+// Załaduj zmienne środowiskowe z pliku .env
 dotenv.config();
 
 const app = express();
 app.use(cors());
-// Zwiększamy limit danych w żądaniu (historia + długi tekst)
 app.use(bodyParser.json({ limit: "2mb" }));
 
-// 🔑 Klucz API pobierany z ENV (Render / plik .env)
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
@@ -45,7 +43,7 @@ Aby wrócić do menu głównego, wpisz: 0.
 
 LOGIKA NAWIGACJI
 Wejście 1–8 → przejście do wybranego modułu.
-Komendy "0", "menu", "powrot", "zmientemat", "wrocdopoczatku", "p" → natychmiast pokazują blok MENU_START (bez komentarzy).
+Komendy "0", "menu", "powrot", "zmientemat", "wrocdopoczatku", "p" → natychmiast pokazują blok MENU_START.
 Komenda powrotu działa zawsze.
 
 ---
@@ -75,61 +73,31 @@ nazwisko → tylko inicjał.
 ---
 
 ŹRÓDŁA I OKRES ANALIZY
-Zawsze korzystaj z najnowszych dostępnych danych:
+Zawsze korzystaj z najnowszych danych: Q4 2025 (lub Q1 2026, jeśli dostępne).
+Źródła obowiązkowe:
+- NBP – Biuletyny cen transakcyjnych,  
+- Otodom Analytics – dane ofertowe i transakcyjne,  
+- AMRON-SARFiN – raporty kwartalne,  
+- Dane lokalne: Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Poznań, Szczecin.  
+Jeśli brak danych z danego regionu — interpoluj z rynków sąsiednich.
 
-- NBP – Biuletyny cen transakcyjnych (ostatni pełny kwartał)  
-- Otodom Analytics – dane ofertowe i transakcyjne (ostatni miesiąc lub kwartał)  
-- AMRON-SARFiN – raporty kwartalne  
-- Dane lokalne – Poznań, Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Szczecin  
-
-Jeśli dane nie są dostępne — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
 W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowszy dostępny).
 
 ---
 
 ALGORYTM ANALIZY
 Po wyborze tematu przejdź bezpośrednio do opracowania raportu.
+Uwzględnij najnowsze dane rynkowe, porównania historyczne (min. 12 mies.) oraz aktualne trendy makro.
 
 ---
 
-MODUŁY
-// Dla siebie (zakup)
-Prześlij proszę link do ogłoszenia lub kilka linków do mieszkań, które rozważasz zakupowo.  
-Na tej podstawie przygotujemy przegląd 5–10 ofert i wybór Top 3 z analizą funkcjonalną i finansową.  
-
-// Ogłoszenie sprzedaży
-Prześlij proszę link do ogłoszenia nieruchomości na sprzedaż, które chcesz, abyśmy przeanalizowali.  
-Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełną treść ogłoszenia.  
-Na tej podstawie przygotujemy pełny raport z analizą ROI, cap rate, DSCR, układu, liftingów A/B/C i rekomendacją ceny.  
-
-// Ogłoszenie najmu
-Prześlij proszę link do ogłoszenia nieruchomości na wynajem, które chcesz, abyśmy przeanalizowali.  
-Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełną treść ogłoszenia.  
-Na tej podstawie opracujemy analizę opłacalności, standardu i porównanie z rynkiem.  
-
-// Szukasz najmu
-Prześlij proszę lokalizację, budżet i oczekiwany standard.  
-Na tej podstawie przygotujemy przegląd 5–10 aktualnych ofert i wybierzemy Top 3 najbardziej opłacalne.  
-
-// Sprzedaż
-Prześlij proszę link do swojego aktualnego ogłoszenia lub wklej jego treść, jeśli link nie otwiera się poprawnie.  
-Na tej podstawie opracujemy analizę treści, zdjęć, wyróżników i strategii cenowej – wraz z rekomendacjami, jak zwiększyć skuteczność oferty.  
-
-// Flip
-Prześlij proszę link do ogłoszenia mieszkania, które rozważasz jako inwestycję pod flipa.  
-Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełny opis ogłoszenia wraz z informacjami o metrażu, stanie technicznym i cenie.  
-Na tej podstawie przygotujemy analizę kosztów remontu, potencjału sprzedaży, ROI i marży.  
-
-// Problem z najmem
-Prześlij proszę link do ogłoszenia nieruchomości, którą obecnie wynajmujesz, lub jego treść, jeśli link nie otwiera się prawidłowo.  
-Na tej podstawie przeanalizujemy przyczyny braku zainteresowania i przygotujemy rekomendacje optymalizacyjne.  
-
-// Optymalizacja najmu
-Prześlij proszę link do ogłoszenia nieruchomości, którą chcesz zoptymalizować, lub jego treść, jeśli link nie otwiera się prawidłowo.  
-Na tej podstawie opracujemy raport z trzema wariantami liftingów A/B/C – z kosztami i wpływem na rentowność najmu.
+KONSEKWENCJA STYLU
+Piszesz w pierwszej osobie liczby mnogiej („Analizujemy…”, „Rekomendujemy…”).  
+Zachowujesz ton eksperta premium – rzeczowy, klarowny, pozbawiony emocji.  
+Nie używasz zwrotów typu „Świetnie”, „Dziękujemy”, „Super wybór”.  
+Nie tworzysz porad inwestycyjnych — tylko analizy, interpretacje i prognozy trendów.
 `;
 
-// 🧩 Endpoint główny
 app.post("/api/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
@@ -138,38 +106,46 @@ app.post("/api/chat", async (req, res) => {
       {
         role: "system",
         content: `${systemPrompt}
-
-Tryb: DomAdvisor — generuj raport ekspercki w skróconej formie (ok. 1000–1500 słów).
-Każdy raport ma być analityczny i konkretny, zgodny z polskim prawem (bez rekomendacji inwestycyjnych, jedynie analiza i interpretacja danych).`
+Tryb: DomAdvisor Premium — generuj raporty eksperckie o długości ok. 3000–4000 słów, w stylu konsultanta premium. 
+Każdy raport ma być analityczny i edukacyjny, zgodny z polskim prawem (bez rekomendacji inwestycyjnych).`
       },
       ...(history || []),
       { role: "user", content: message }
     ];
 
-    // 🔧 Krótsze raporty – bez dzielenia
+    // 🧠 Pierwsza próba generacji
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        ...messages,
-        {
-          role: "system",
-          content: `
-          Pisz raport ekspercki w skróconej formie — maksymalnie 1000–1500 słów.
-          Skup się na kluczowych wskaźnikach, interpretacji i rekomendacji, bez nadmiernego rozwijania.
-          `
-        }
-      ],
-      max_tokens: 2000,
-      temperature: 0.7,
-      presence_penalty: -0.2,
-      frequency_penalty: -0.4,
+      model: "gpt-4o-mini",
+      messages,
+      max_tokens: 5000,
+      temperature: 0.7
     });
 
-    const response = completion.choices?.[0]?.message?.content || "";
-    res.json({ success: true, response });
+    let response = completion.choices?.[0]?.message?.content || "";
+    const wordCount = response.split(" ").length;
+    console.log(`📊 Długość wygenerowanego raportu: ${wordCount} słów`);
 
+    // 🧩 Jeśli AI przerwało (zbyt krótki raport) → dokończ automatycznie
+    if (wordCount < 2000) {
+      console.warn("⚠️ Raport niepełny — generuję kontynuację (część 2)...");
+      const followUp = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          ...messages,
+          { role: "assistant", content: response },
+          { role: "user", content: "Kontynuuj raport od miejsca, w którym został przerwany (część 2)." }
+        ],
+        max_tokens: 4000,
+        temperature: 0.7
+      });
+      const continuation = followUp.choices?.[0]?.message?.content || "";
+      response += "\n\n" + continuation;
+      console.log("✅ Raport uzupełniony o drugą część.");
+    }
+
+    res.json({ success: true, response });
   } catch (error) {
-    console.error("Błąd API:", error);
+    console.error("❌ Błąd API:", error);
     res.json({ success: false, error: error.message });
   }
 });
