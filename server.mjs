@@ -198,18 +198,35 @@ app.post("/api/chat", async (req, res) => {
     const { message, history } = req.body;
 
     const messages = [
-      { role: "system", content: systemPrompt },
-      ...(history || []),
-      { role: "user", content: message }
-    ];
+  {
+    role: "system",
+    content: `${systemPrompt}
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages
-    });
+Tryb: DomAdvisor Premium — generuj raporty eksperckie o długości ok. 6000 słów, w stylu konsultanta premium. 
+Każdy raport ma być rozbudowany, analityczny i edukacyjny, zgodny z polskim prawem (bez rekomendacji inwestycyjnych, jedynie analiza i interpretacja danych).`
+  },
+  ...(history || []),
+  { role: "user", content: message }
+];
+
+
+   const completion = await openai.chat.completions.create({
+  model: "gpt-4o-mini",
+  messages,
+  max_tokens: 6000, // pozwala generować raporty 5–6k słów
+  temperature: 0.7,  // lekka kreatywność przy zachowaniu eksperckiego tonu
+});
+
 
     const response = completion.choices[0].message.content;
-    res.json({ success: true, response });
+
+// 🧩 Zabezpieczenie: sprawdź, czy raport nie jest zbyt krótki
+if (!response || response.split(" ").length < 3000) {
+  console.warn("⚠️ Raport mógł zostać skrócony – spróbuj ponownie.");
+}
+
+res.json({ success: true, response });
+
 
   } catch (error) {
     console.error("Błąd API:", error);
@@ -220,4 +237,5 @@ app.post("/api/chat", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`✅ Serwer działa na porcie ${PORT}`));
+
 
