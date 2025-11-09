@@ -255,7 +255,7 @@ const completion = await openai.chat.completions.create({
       `
     }
   ],
-  max_tokens: 12000,  // 🧩 podniesiony limit – pozwala na pełne opracowania
+  max_tokens: 8000,  // 🧩 podniesiony limit – pozwala na pełne opracowania
   temperature: 0.7,   // zachowuje konsultacyjny ton, z lekką naturalnością
   presence_penalty: -0.2,  // zachęca do rozwinięcia treści
   frequency_penalty: -0.4, // zmniejsza powtarzanie
@@ -291,6 +291,7 @@ res.json({ success: true, response });
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`✅ Serwer działa na porcie ${PORT}`));
+
 
 
 
