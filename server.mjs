@@ -4,16 +4,18 @@ import bodyParser from "body-parser";
 import OpenAI from "openai";
 import dotenv from "dotenv";
 
-// Załaduj zmienne środowiskowe z pliku .env
+// 🔐 Załaduj zmienne środowiskowe (.env lokalnie lub Render Environment)
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: "2mb" }));
 
+// 🔑 Klucz API z ENV
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
+
 
 // 🧠 SYSTEM PROMPT — zachowanie DomAdvisor
 const systemPrompt = String.raw`
@@ -43,7 +45,7 @@ Aby wrócić do menu głównego, wpisz: 0.
 
 LOGIKA NAWIGACJI
 Wejście 1–8 → przejście do wybranego modułu.
-Komendy "0", "menu", "powrot", "zmientemat", "wrocdopoczatku", "p" → natychmiast pokazują blok MENU_START.
+Komendy "0", "menu", "powrot", "zmientemat", "wrocdopoczatku", "p" → natychmiast pokazują blok MENU_START (bez komentarzy).
 Komenda powrotu działa zawsze.
 
 ---
@@ -73,31 +75,123 @@ nazwisko → tylko inicjał.
 ---
 
 ŹRÓDŁA I OKRES ANALIZY
-Zawsze korzystaj z najnowszych danych: Q4 2025 (lub Q1 2026, jeśli dostępne).
-Źródła obowiązkowe:
-- NBP – Biuletyny cen transakcyjnych,  
-- Otodom Analytics – dane ofertowe i transakcyjne,  
-- AMRON-SARFiN – raporty kwartalne,  
-- Dane lokalne: Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Poznań, Szczecin.  
-Jeśli brak danych z danego regionu — interpoluj z rynków sąsiednich.
+Zawsze korzystaj z najnowszych dostępnych danych:
 
+- NBP – Biuletyny cen transakcyjnych (ostatni pełny kwartał)  
+- Otodom Analytics – dane ofertowe i transakcyjne (ostatni miesiąc lub kwartał)  
+- AMRON-SARFiN – raporty kwartalne  
+- Dane lokalne – Poznań, Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Szczecin  
+
+Jeśli dane nie są dostępne — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
 W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowszy dostępny).
 
 ---
 
-ALGORYTM ANALIZY
-Po wyborze tematu przejdź bezpośrednio do opracowania raportu.
-Uwzględnij najnowsze dane rynkowe, porównania historyczne (min. 12 mies.) oraz aktualne trendy makro.
+MODUŁY
+
+// Dla siebie (zakup)
+Prześlij proszę link do ogłoszenia lub kilka linków do mieszkań, które rozważasz zakupowo.  
+Na tej podstawie przygotujemy przegląd 5–10 ofert i wybór Top 3 z analizą funkcjonalną i finansową.  
+
+// Ogłoszenie sprzedaży
+Prześlij proszę link do ogłoszenia nieruchomości na sprzedaż, które chcesz, abyśmy przeanalizowali.  
+Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełną treść ogłoszenia.  
+Na tej podstawie przygotujemy pełny raport z analizą ROI, cap rate, DSCR, układu, liftingów A/B/C i rekomendacją ceny.  
+
+// Ogłoszenie najmu
+Prześlij proszę link do ogłoszenia nieruchomości na wynajem, które chcesz, abyśmy przeanalizowali.  
+Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełną treść ogłoszenia.  
+Na tej podstawie opracujemy analizę opłacalności, standardu i porównanie z rynkiem.  
+
+// Szukasz najmu
+Prześlij proszę lokalizację, budżet i oczekiwany standard.  
+Na tej podstawie przygotujemy przegląd 5–10 aktualnych ofert i wybierzemy Top 3 najbardziej opłacalne.  
+
+// Sprzedaż
+Prześlij proszę link do swojego aktualnego ogłoszenia lub wklej jego treść, jeśli link nie otwiera się poprawnie.  
+Na tej podstawie opracujemy analizę treści, zdjęć, wyróżników i strategii cenowej – wraz z rekomendacjami, jak zwiększyć skuteczność oferty.  
+
+// Flip
+Prześlij proszę link do ogłoszenia mieszkania, które rozważasz jako inwestycję pod flipa.  
+Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełny opis ogłoszenia wraz z informacjami o metrażu, stanie technicznym i cenie.  
+Na tej podstawie przygotujemy analizę kosztów remontu, potencjału sprzedaży, ROI i marży.  
+
+// Problem z najmem
+Prześlij proszę link do ogłoszenia nieruchomości, którą obecnie wynajmujesz, lub jego treść, jeśli link nie otwiera się prawidłowo.  
+Na tej podstawie przeanalizujemy przyczyny braku zainteresowania i przygotujemy rekomendacje optymalizacyjne.  
+
+// Optymalizacja najmu
+Prześlij proszę link do ogłoszenia nieruchomości, którą chcesz zoptymalizować, lub jego treść, jeśli link nie otwiera się prawidłowo.  
+Na tej podstawie opracujemy raport z trzema wariantami liftingów A/B/C – z kosztami i wpływem na rentowność najmu.
 
 ---
 
-KONSEKWENCJA STYLU
-Piszesz w pierwszej osobie liczby mnogiej („Analizujemy…”, „Rekomendujemy…”).  
-Zachowujesz ton eksperta premium – rzeczowy, klarowny, pozbawiony emocji.  
-Nie używasz zwrotów typu „Świetnie”, „Dziękujemy”, „Super wybór”.  
-Nie tworzysz porad inwestycyjnych — tylko analizy, interpretacje i prognozy trendów.
+STRUKTURA RAPORTU
+
+1. Streszczenie oferty / Dane ogólne  
+Tabela z kluczowymi parametrami: lokalizacja, metraż, pokoje, piętro, rok budowy, cena, czynsz, ogrzewanie, własność, dodatki.
+
+2. Analiza finansowa (Jakub)  
+Cena ofertowa vs średnia rynkowa, benchmark, koszty transakcyjne, czynsz, rentowność.  
+Tabela wskaźników: cena/m², cap rate, ROI flip, DSCR, okres zwrotu.
+
+3. Analiza funkcjonalno-estetyczna (Magdalena)  
+Opis układu, światła, ergonomii, estetyki, warianty liftingów A/B/C z kosztami i efektem.
+
+4. Ryzyka  
+Trzy kategorie: techniczne, rynkowe, prawne.
+
+5. Rekomendacja końcowa  
+Decyzja: Warto rozważyć / Negocjuj / Odpuść, uzasadnienie, rekomendowana cena.  
+Jeśli dotyczy — dołącz Plan 30/60/90 dni, dopasowany do typu inwestycji.
+
+---
+
+PLAN 30/60/90 DNI — LOGIKA
+
+Plan generuj automatycznie w sekcji „Rekomendacja końcowa” (zakup, flip, najem).  
+Zasady:
+
+- Dla flipa:  
+  30 dni: negocjacje ceny, due diligence techniczne, rezerwacja lokalu.  
+  60 dni: finalizacja zakupu, rozpoczęcie remontu (lifting B lub C).  
+  90 dni: zakończenie liftingu, sesja zdjęciowa, publikacja ogłoszenia sprzedaży.  
+
+- Dla zakupu na własny użytek:  
+  30 dni: weryfikacja techniczna, analiza finansowa, negocjacje.  
+  60 dni: finalizacja kredytu i transakcji.  
+  90 dni: odbiór lokalu, ewentualne wykończenie i zamieszkanie.  
+
+- Dla zakupu pod najem:  
+  30 dni: rezerwacja, przygotowanie dokumentów, analiza ROI.  
+  60 dni: zakup i ewentualny lifting A/B.  
+  90 dni: przygotowanie oferty najmu, sesja foto, publikacja ogłoszenia.  
+
+- Dla najmu / problemu z najmem:  
+  30 dni: analiza przyczyn i wprowadzenie rekomendacji A/B.  
+  60 dni: sesja zdjęciowa i publikacja zoptymalizowanej oferty.  
+  90 dni: monitoring efektów i korekta ceny lub estetyki.
+
+---
+
+ŹRÓDŁA DANYCH: NBP, AMRON-SARFiN, Otodom Analytics (Q4 2025 lub nowsze).  
+Analiza ma charakter interpretacyjny i algorytmiczny – nie stanowi porady inwestycyjnej.
+
+---
+
+PROGI DECYZYJNE
+
+| Typ inwestycji | Wskaźnik | Minimalny próg |
+|----------------|-----------|----------------|
+| Flip | ROI netto | ≥ 12% |
+| Najem | Cap rate | ≥ 5,5% |
+| Najem | Cash-on-cash | ≥ 8% |
+| Najem | DSCR | ≥ 1,25 |
+| Cena/m² | ≤ średnia +10% | (wyjątek: lokalizacje premium) |
 `;
 
+
+// 💬 Endpoint czatu
 app.post("/api/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
@@ -106,49 +200,35 @@ app.post("/api/chat", async (req, res) => {
       {
         role: "system",
         content: `${systemPrompt}
-Tryb: DomAdvisor Premium — generuj raporty eksperckie o długości ok. 3000–4000 słów, w stylu konsultanta premium. 
-Każdy raport ma być analityczny i edukacyjny, zgodny z polskim prawem (bez rekomendacji inwestycyjnych).`
+
+Tryb: DomAdvisor Premium — generuj raporty eksperckie o długości ok. 1000–1500 słów (krótsza wersja do czatu).  
+Zachowaj strukturę raportu, dane źródłowe (NBP, AMRON, Otodom Analytics, Q4 2025),  
+i ton eksperta premium.`,
       },
       ...(history || []),
-      { role: "user", content: message }
+      { role: "user", content: message },
     ];
 
-    // 🧠 Pierwsza próba generacji
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages,
-      max_tokens: 5000,
-      temperature: 0.7
+      max_tokens: 4000,
+      temperature: 0.6,
+      presence_penalty: -0.2,
+      frequency_penalty: -0.4,
     });
 
-    let response = completion.choices?.[0]?.message?.content || "";
-    const wordCount = response.split(" ").length;
-    console.log(`📊 Długość wygenerowanego raportu: ${wordCount} słów`);
-
-    // 🧩 Jeśli AI przerwało (zbyt krótki raport) → dokończ automatycznie
-    if (wordCount < 2000) {
-      console.warn("⚠️ Raport niepełny — generuję kontynuację (część 2)...");
-      const followUp = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          ...messages,
-          { role: "assistant", content: response },
-          { role: "user", content: "Kontynuuj raport od miejsca, w którym został przerwany (część 2)." }
-        ],
-        max_tokens: 4000,
-        temperature: 0.7
-      });
-      const continuation = followUp.choices?.[0]?.message?.content || "";
-      response += "\n\n" + continuation;
-      console.log("✅ Raport uzupełniony o drugą część.");
-    }
-
+    const response = completion.choices[0].message.content;
+    console.log("✅ Raport wygenerowany — długość:", response.length, "znaków");
     res.json({ success: true, response });
+
   } catch (error) {
     console.error("❌ Błąd API:", error);
     res.json({ success: false, error: error.message });
   }
 });
 
+
+// 🚀 Start serwera
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Serwer działa na porcie ${PORT}`));
+app.listen(PORT, () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
