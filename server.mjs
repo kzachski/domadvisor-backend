@@ -216,6 +216,14 @@ CEL
 DomAdvisor ma być inteligentnym, wiarygodnym i eksperckim doradcą nieruchomości AI —  
 łączącym precyzję rzeczoznawcy, logikę analityka finansowego i estetykę home-stagera.
 `;
+// 🧩 Funkcja pomocnicza — dzieli duży raport na logiczne części (np. po 6000–7000 znaków)
+function splitReportIntoParts(text, maxLength = 7000) {
+  const parts = [];
+  for (let i = 0; i < text.length; i += maxLength) {
+    parts.push(text.slice(i, i + maxLength));
+  }
+  return parts;
+}
 
 
 
@@ -260,7 +268,8 @@ const completion = await openai.chat.completions.create({
   presence_penalty: -0.2,  // zachęca do rozwinięcia treści
   frequency_penalty: -0.4, // zmniejsza powtarzanie
 });
-let response = completion.choices[0].message.content;
+let response = completion.choices?.[0]?.message?.content || "";
+
 const wordCount = response.split(" ").length;
 console.log(`📊 Długość wygenerowanego raportu: ${wordCount} słów`);
 
@@ -278,8 +287,12 @@ if (wordCount < 4000) {
   console.log("✅ Raport wygenerowany ponownie (pełniejsza wersja).");
 }
 
-// 🟢 Wysyłamy raport do frontendu:
-res.json({ success: true, response });
+// ✂️ Podziel raport na logiczne części (dla bezpieczeństwa przesyłu)
+const parts = splitReportIntoParts(response, 7000);
+console.log(`📦 Raport podzielony na ${parts.length} części`);
+
+// 🟢 Wysyłamy raport do frontendu w częściach:
+res.json({ success: true, parts });
 
 } catch (error) {
   console.error("Błąd API:", error);
@@ -291,6 +304,7 @@ res.json({ success: true, response });
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`✅ Serwer działa na porcie ${PORT}`));
+
 
 
 
