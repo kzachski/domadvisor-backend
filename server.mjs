@@ -236,49 +236,62 @@ Każdy raport ma być rozbudowany, analityczny i edukacyjny, zgodny z polskim pr
 ];
 
 
-      const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-      max_tokens: 6000, // pozwala generować długie raporty (5–6k słów)
-      temperature: 0.7,
-      presence_penalty: -0.2, // zachęca do rozwijania treści
-      frequency_penalty: -0.3  // zmniejsza powtarzanie zdań
-   });
+      // 🔧 WERSJA PREMIUM – raporty 6000–7000 słów, styl ekspercki
 
-   let response = completion.choices[0].message.content;
+const completion = await openai.chat.completions.create({
+  model: "gpt-4o", // 🔁 pełna wersja modelu – lepiej radzi sobie z długimi treściami
+  messages: [
+    ...messages,
+    {
+      role: "system",
+      content: `
+      Pisz raporty eksperckie o długości 6000–7000 słów (ok. 25–30 tys. znaków).
+      Każda sekcja raportu musi być wyczerpująca, merytoryczna i szczegółowa.
+      Nie streszczaj, nie upraszczaj, nie skracaj analiz.
+      Raport ma mieć strukturę, styl i logikę jak profesjonalny dokument doradczy (consultingowy).
+      Zawsze stosuj dane, interpretacje i przykłady odnoszące się do kontekstu rynkowego (NBP, AMRON, Otodom Analytics, Q4 2025).
+      Zachowuj ton premium, bez zwrotów potocznych i marketingowych.
+      Pamiętaj o zgodności z prawem – raport ma charakter analityczny, nie rekomendacyjny.
+      `
+    }
+  ],
+  max_tokens: 12000,  // 🧩 podniesiony limit – pozwala na pełne opracowania
+  temperature: 0.7,   // zachowuje konsultacyjny ton, z lekką naturalnością
+  presence_penalty: -0.2,  // zachęca do rozwinięcia treści
+  frequency_penalty: -0.4, // zmniejsza powtarzanie
+});
+let response = completion.choices[0].message.content;
+const wordCount = response.split(" ").length;
+console.log(`📊 Długość wygenerowanego raportu: ${wordCount} słów`);
 
-   // 🧩 Logowanie długości raportu
-   const wordCount = response.split(" ").length;
-   console.log(`📊 Długość wygenerowanego raportu: ${wordCount} słów`);
+if (wordCount < 4000) {
+  console.warn("⚠️ Raport zbyt krótki — ponowna próba generacji w trybie wydłużonym...");
+  const regen = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages,
+    max_tokens: 14000,
+    temperature: 0.7,
+    presence_penalty: -0.2,
+    frequency_penalty: -0.4,
+  });
+  response = regen.choices[0].message.content;
+  console.log("✅ Raport wygenerowany ponownie (pełniejsza wersja).");
+}
 
-   // ⚠️ Jeśli raport jest krótszy niż 2500 słów — automatyczna regeneracja
-   if (!response || wordCount < 2500) {
-      console.warn("⚠️ Raport zbyt krótki — ponowna próba generacji...");
-      const regen = await openai.chat.completions.create({
-         model: "gpt-4o-mini",
-         messages,
-         max_tokens: 8000, // zwiększony limit
-         temperature: 0.7,
-         presence_penalty: -0.2,
-         frequency_penalty: -0.3
-      });
-      response = regen.choices[0].message.content;
-      console.log("✅ Raport wygenerowany ponownie (pełniejsza wersja).");
-   }
+// 🟢 Wysyłamy raport do frontendu:
+res.json({ success: true, response });
 
-   res.json({ success: true, response });
+} catch (error) {
+  console.error("Błąd API:", error);
+  res.json({ success: false, error: error.message });
+}
 
-
-
-  } catch (error) {
-    console.error("Błąd API:", error);
-    res.json({ success: false, error: error.message });
-  }
 });
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`✅ Serwer działa na porcie ${PORT}`));
+
 
 
 
