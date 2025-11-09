@@ -12,12 +12,10 @@ app.use(cors());
 // Zwiększamy limit danych w żądaniu (historia + długi tekst)
 app.use(bodyParser.json({ limit: "2mb" }));
 
-
 // 🔑 Klucz API pobierany z ENV (Render / plik .env)
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
-
 
 // 🧠 SYSTEM PROMPT — zachowanie DomAdvisor
 const systemPrompt = String.raw`
@@ -95,8 +93,6 @@ Po wyborze tematu przejdź bezpośrednio do opracowania raportu.
 ---
 
 MODUŁY
-
-
 // Dla siebie (zakup)
 Prześlij proszę link do ogłoszenia lub kilka linków do mieszkań, które rozważasz zakupowo.  
 Na tej podstawie przygotujemy przegląd 5–10 ofert i wybór Top 3 z analizą funkcjonalną i finansową.  
@@ -131,194 +127,52 @@ Na tej podstawie przeanalizujemy przyczyny braku zainteresowania i przygotujemy 
 // Optymalizacja najmu
 Prześlij proszę link do ogłoszenia nieruchomości, którą chcesz zoptymalizować, lub jego treść, jeśli link nie otwiera się prawidłowo.  
 Na tej podstawie opracujemy raport z trzema wariantami liftingów A/B/C – z kosztami i wpływem na rentowność najmu.
-
-
-STRUKTURA RAPORTU
-
-1. Streszczenie oferty / Dane ogólne  
-Tabela z kluczowymi parametrami: lokalizacja, metraż, pokoje, piętro, rok budowy, cena, czynsz, ogrzewanie, własność, dodatki.
-
-2. Analiza finansowa (Jakub)  
-Cena ofertowa vs średnia rynkowa, benchmark, koszty transakcyjne, czynsz, rentowność.  
-Tabela wskaźników: cena/m², cap rate, ROI flip, DSCR, okres zwrotu.
-
-3. Analiza funkcjonalno-estetyczna (Magdalena)  
-Opis układu, światła, ergonomii, estetyki, warianty liftingów A/B/C z kosztami i efektem.
-
-4. Ryzyka  
-Trzy kategorie: techniczne, rynkowe, prawne.
-
-5. Rekomendacja końcowa  
-Decyzja: Kup / Negocjuj / Odpuść, uzasadnienie, rekomendowana cena.  
-Jeśli dotyczy — dołącz Plan 30/60/90 dni, dopasowany do typu inwestycji.
-
----
-
-PLAN 30/60/90 DNI — LOGIKA
-
-Plan powinien być automatycznie generowany w sekcji „Rekomendacja końcowa”, gdy temat analizy dotyczy zakupu, flipa lub najmu.  
-Zasady generowania:
-
-- Dla flipa:  
-  30 dni: negocjacje ceny, due diligence techniczne, rezerwacja lokalu.  
-  60 dni: finalizacja zakupu, rozpoczęcie remontu (lifting B lub C).  
-  90 dni: zakończenie liftingu, sesja zdjęciowa, publikacja ogłoszenia sprzedaży.  
-
-- Dla zakupu na własny użytek:  
-  30 dni: weryfikacja techniczna, analiza finansowa, negocjacje.  
-  60 dni: finalizacja kredytu i transakcji.  
-  90 dni: odbiór lokalu, ewentualne wykończenie i zamieszkanie.  
-
-- Dla zakupu pod najem:  
-  30 dni: rezerwacja, przygotowanie dokumentów, analiza ROI.  
-  60 dni: zakup i ewentualny lifting A/B.  
-  90 dni: przygotowanie oferty najmu, sesja foto, publikacja ogłoszenia.  
-
-- Dla najmu lub problemu z najmem:  
-  30 dni: analiza przyczyn i wprowadzenie rekomendacji A/B.  
-  60 dni: sesja zdjęciowa i publikacja zoptymalizowanej oferty.  
-  90 dni: monitoring efektów i korekta ceny lub estetyki.  
-
-Plan 30/60/90 dni powinien być opisany w 3 punktach i stanowić czytelny plan działania, a nie ogólnikowy harmonogram.
-
----
-
-ŹRÓDŁA DANYCH
-NBP, AMRON-SARFiN, Otodom Analytics (najnowszy dostępny okres).
-
-UWAGA METODOLOGICZNA
-Analiza ma charakter interpretacyjny i algorytmiczny.  
-Nie stanowi porady inwestycyjnej.
-
----
-
-PROGI DECYZYJNE
-
-| Typ inwestycji | Wskaźnik        | Minimalny próg |
-|----------------|-----------------|----------------|
-| Flip           | ROI netto        | ≥ 12%          |
-| Najem          | Cap rate         | ≥ 5,5%         |
-| Najem          | Cash-on-cash     | ≥ 8%           |
-| Najem          | DSCR             | ≥ 1,25         |
-| Cena/m²        | ≤ średnia +10%   | (wyjątek: lokalizacje premium) |
-
----
-
-KONSEKWENCJA STYLU
-
-Piszesz w pierwszej osobie liczby mnogiej („Analizujemy…”, „Rekomendujemy…”).  
-Zachowujesz ton eksperta premium – rzeczowy, klarowny, pozbawiony emocji.  
-Nie używasz zwrotów typu „Świetnie”, „Dziękujemy”, „Super wybór”.  
-Po zakończeniu raportu nie pytasz o dalsze kroki.  
-Użytkownik może wrócić do menu, wpisując 0.
-
----
-
-CEL
-DomAdvisor ma być inteligentnym, wiarygodnym i eksperckim doradcą nieruchomości AI —  
-łączącym precyzję rzeczoznawcy, logikę analityka finansowego i estetykę home-stagera.
 `;
-// 🧩 Funkcja pomocnicza — dzieli duży raport na logiczne części (np. po 6000–7000 znaków)
-function splitReportIntoParts(text, maxLength = 7000) {
-  const parts = [];
-  for (let i = 0; i < text.length; i += maxLength) {
-    parts.push(text.slice(i, i + maxLength));
-  }
-  return parts;
-}
 
-
-
+// 🧩 Endpoint główny
 app.post("/api/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
 
     const messages = [
-  {
-    role: "system",
-    content: `${systemPrompt}
+      {
+        role: "system",
+        content: `${systemPrompt}
 
-Tryb: DomAdvisor Premium — generuj raporty eksperckie o długości ok. 6000 słów, w stylu konsultanta premium. 
-Każdy raport ma być rozbudowany, analityczny i edukacyjny, zgodny z polskim prawem (bez rekomendacji inwestycyjnych, jedynie analiza i interpretacja danych).`
-  },
-  ...(history || []),
-  { role: "user", content: message }
-];
+Tryb: DomAdvisor — generuj raport ekspercki w skróconej formie (ok. 1000–1500 słów).
+Każdy raport ma być analityczny i konkretny, zgodny z polskim prawem (bez rekomendacji inwestycyjnych, jedynie analiza i interpretacja danych).`
+      },
+      ...(history || []),
+      { role: "user", content: message }
+    ];
 
+    // 🔧 Krótsze raporty – bez dzielenia
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        ...messages,
+        {
+          role: "system",
+          content: `
+          Pisz raport ekspercki w skróconej formie — maksymalnie 1000–1500 słów.
+          Skup się na kluczowych wskaźnikach, interpretacji i rekomendacji, bez nadmiernego rozwijania.
+          `
+        }
+      ],
+      max_tokens: 2000,
+      temperature: 0.7,
+      presence_penalty: -0.2,
+      frequency_penalty: -0.4,
+    });
 
-      // 🔧 WERSJA PREMIUM – raporty 6000–7000 słów, styl ekspercki
+    const response = completion.choices?.[0]?.message?.content || "";
+    res.json({ success: true, response });
 
-const completion = await openai.chat.completions.create({
-  model: "gpt-4o", // 🔁 pełna wersja modelu – lepiej radzi sobie z długimi treściami
-  messages: [
-    ...messages,
-    {
-      role: "system",
-      content: `
-      Pisz raporty eksperckie o długości 6000–7000 słów (ok. 25–30 tys. znaków).
-      Każda sekcja raportu musi być wyczerpująca, merytoryczna i szczegółowa.
-      Nie streszczaj, nie upraszczaj, nie skracaj analiz.
-      Raport ma mieć strukturę, styl i logikę jak profesjonalny dokument doradczy (consultingowy).
-      Zawsze stosuj dane, interpretacje i przykłady odnoszące się do kontekstu rynkowego (NBP, AMRON, Otodom Analytics, Q4 2025).
-      Zachowuj ton premium, bez zwrotów potocznych i marketingowych.
-      Pamiętaj o zgodności z prawem – raport ma charakter analityczny, nie rekomendacyjny.
-      `
-    }
-  ],
-  max_tokens: 8000,  // 🧩 podniesiony limit – pozwala na pełne opracowania
-  temperature: 0.7,   // zachowuje konsultacyjny ton, z lekką naturalnością
-  presence_penalty: -0.2,  // zachęca do rozwinięcia treści
-  frequency_penalty: -0.4, // zmniejsza powtarzanie
-});
-let response = completion.choices?.[0]?.message?.content || "";
-
-const wordCount = response.split(" ").length;
-console.log("📊 Liczba słów:", wordCount);
-console.log("📏 Długość raportu (znaki):", response.length);
-console.log("🕒 Czas generacji zakończony – przygotowuję podział...");
-    
-console.log(`📊 Długość wygenerowanego raportu: ${wordCount} słów`);
-
-if (wordCount < 4000) {
-  console.warn("⚠️ Raport zbyt krótki — ponowna próba generacji w trybie wydłużonym...");
-  const regen = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages,
-    max_tokens: 14000,
-    temperature: 0.7,
-    presence_penalty: -0.2,
-    frequency_penalty: -0.4,
-  });
-  response = regen.choices[0].message.content;
-  console.log("✅ Raport wygenerowany ponownie (pełniejsza wersja).");
-}
-
-// ✂️ Podziel raport na logiczne części (dla bezpieczeństwa przesyłu)
-const parts = splitReportIntoParts(response, 7000);
-console.log(`📦 Raport podzielony na ${parts.length} części`);
-
-// ✂️ Przycinamy części, żeby nie przekroczyć limitu JSON na Render
-const safeParts = parts.map(p => p.slice(0, 6000));
-
-// 🟢 Wysyłamy raport do frontendu
-res.json({ success: true, parts: safeParts });
-
-
-} catch (error) {
-  console.error("Błąd API:", error);
-  res.json({ success: false, error: error.message });
-}
-
+  } catch (error) {
+    console.error("Błąd API:", error);
+    res.json({ success: false, error: error.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => console.log(`✅ Serwer działa na porcie ${PORT}`));
-
-
-
-
-
-
-
-
