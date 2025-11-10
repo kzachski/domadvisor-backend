@@ -215,13 +215,18 @@ app.post("/api/send-report", async (req, res) => {
   }
 });
 
-// =========================================================
-// 🚀 START SERWERA
-// =========================================================
-// ✅ Domyślny endpoint testowy
+// ============================================================
+// 🚀 START SERWERA (Render fix)
+// ============================================================
+
+// Domyślny endpoint testowy
 app.get("/", (req, res) => {
   res.send("✅ DomAdvisor backend działa poprawnie. Użyj POST /api/send-report");
 });
+
+// Render wymaga nasłuchiwania na process.env.PORT i adresie 0.0.0.0
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
+
+
 
