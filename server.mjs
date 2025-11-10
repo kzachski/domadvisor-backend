@@ -218,5 +218,10 @@ app.post("/api/send-report", async (req, res) => {
 // =========================================================
 // 🚀 START SERWERA
 // =========================================================
+// ✅ Domyślny endpoint testowy
+app.get("/", (req, res) => {
+  res.send("✅ DomAdvisor backend działa poprawnie. Użyj POST /api/send-report");
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
+
