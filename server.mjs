@@ -1,8 +1,17 @@
+// =========================================================
+// 🏠 DOMADVISOR PREMIUM BACKEND (Render Ready)
+// GPT-4o + SMTP (home.pl) + PDF + API Chat
+// =========================================================
+
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
 
 // 🔐 Załaduj zmienne środowiskowe (.env lokalnie lub Render Environment)
 dotenv.config();
@@ -11,13 +20,12 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: "2mb" }));
 
-// 🔑 Klucz API z ENV
+// 🔑 Klucz API OpenAI z ENV
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-
-// 🧠 SYSTEM PROMPT — zachowanie DomAdvisor
+// 🧠 SYSTEM PROMPT – zachowanie DomAdvisor
 const systemPrompt = String.raw`
 DOMADVISOR – SYSTEM PROMPT (v3.3 / 2025–2026 Ready)
 
@@ -87,45 +95,6 @@ W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowsz
 
 ---
 
-MODUŁY
-
-// Dla siebie (zakup)
-Prześlij proszę link do ogłoszenia lub kilka linków do mieszkań, które rozważasz zakupowo.  
-Na tej podstawie przygotujemy przegląd 5–10 ofert i wybór Top 3 z analizą funkcjonalną i finansową.  
-
-// Ogłoszenie sprzedaży
-Prześlij proszę link do ogłoszenia nieruchomości na sprzedaż, które chcesz, abyśmy przeanalizowali.  
-Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełną treść ogłoszenia.  
-Na tej podstawie przygotujemy pełny raport z analizą ROI, cap rate, DSCR, układu, liftingów A/B/C i rekomendacją ceny.  
-
-// Ogłoszenie najmu
-Prześlij proszę link do ogłoszenia nieruchomości na wynajem, które chcesz, abyśmy przeanalizowali.  
-Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełną treść ogłoszenia.  
-Na tej podstawie opracujemy analizę opłacalności, standardu i porównanie z rynkiem.  
-
-// Szukasz najmu
-Prześlij proszę lokalizację, budżet i oczekiwany standard.  
-Na tej podstawie przygotujemy przegląd 5–10 aktualnych ofert i wybierzemy Top 3 najbardziej opłacalne.  
-
-// Sprzedaż
-Prześlij proszę link do swojego aktualnego ogłoszenia lub wklej jego treść, jeśli link nie otwiera się poprawnie.  
-Na tej podstawie opracujemy analizę treści, zdjęć, wyróżników i strategii cenowej – wraz z rekomendacjami, jak zwiększyć skuteczność oferty.  
-
-// Flip
-Prześlij proszę link do ogłoszenia mieszkania, które rozważasz jako inwestycję pod flipa.  
-Jeśli link nie działa lub nie otwiera się poprawnie — wklej pełny opis ogłoszenia wraz z informacjami o metrażu, stanie technicznym i cenie.  
-Na tej podstawie przygotujemy analizę kosztów remontu, potencjału sprzedaży, ROI i marży.  
-
-// Problem z najmem
-Prześlij proszę link do ogłoszenia nieruchomości, którą obecnie wynajmujesz, lub jego treść, jeśli link nie otwiera się prawidłowo.  
-Na tej podstawie przeanalizujemy przyczyny braku zainteresowania i przygotujemy rekomendacje optymalizacyjne.  
-
-// Optymalizacja najmu
-Prześlij proszę link do ogłoszenia nieruchomości, którą chcesz zoptymalizować, lub jego treść, jeśli link nie otwiera się prawidłowo.  
-Na tej podstawie opracujemy raport z trzema wariantami liftingów A/B/C – z kosztami i wpływem na rentowność najmu.
-
----
-
 STRUKTURA RAPORTU
 
 1. Streszczenie oferty / Dane ogólne  
@@ -145,53 +114,11 @@ Trzy kategorie: techniczne, rynkowe, prawne.
 Decyzja: Warto rozważyć / Negocjuj / Odpuść, uzasadnienie, rekomendowana cena.  
 Jeśli dotyczy — dołącz Plan 30/60/90 dni, dopasowany do typu inwestycji.
 
----
+---`;
 
-PLAN 30/60/90 DNI — LOGIKA
-
-Plan generuj automatycznie w sekcji „Rekomendacja końcowa” (zakup, flip, najem).  
-Zasady:
-
-- Dla flipa:  
-  30 dni: negocjacje ceny, due diligence techniczne, rezerwacja lokalu.  
-  60 dni: finalizacja zakupu, rozpoczęcie remontu (lifting B lub C).  
-  90 dni: zakończenie liftingu, sesja zdjęciowa, publikacja ogłoszenia sprzedaży.  
-
-- Dla zakupu na własny użytek:  
-  30 dni: weryfikacja techniczna, analiza finansowa, negocjacje.  
-  60 dni: finalizacja kredytu i transakcji.  
-  90 dni: odbiór lokalu, ewentualne wykończenie i zamieszkanie.  
-
-- Dla zakupu pod najem:  
-  30 dni: rezerwacja, przygotowanie dokumentów, analiza ROI.  
-  60 dni: zakup i ewentualny lifting A/B.  
-  90 dni: przygotowanie oferty najmu, sesja foto, publikacja ogłoszenia.  
-
-- Dla najmu / problemu z najmem:  
-  30 dni: analiza przyczyn i wprowadzenie rekomendacji A/B.  
-  60 dni: sesja zdjęciowa i publikacja zoptymalizowanej oferty.  
-  90 dni: monitoring efektów i korekta ceny lub estetyki.
-
----
-
-ŹRÓDŁA DANYCH: NBP, AMRON-SARFiN, Otodom Analytics (Q4 2025 lub nowsze).  
-Analiza ma charakter interpretacyjny i algorytmiczny – nie stanowi porady inwestycyjnej.
-
----
-
-PROGI DECYZYJNE
-
-| Typ inwestycji | Wskaźnik | Minimalny próg |
-|----------------|-----------|----------------|
-| Flip | ROI netto | ≥ 12% |
-| Najem | Cap rate | ≥ 5,5% |
-| Najem | Cash-on-cash | ≥ 8% |
-| Najem | DSCR | ≥ 1,25 |
-| Cena/m² | ≤ średnia +10% | (wyjątek: lokalizacje premium) |
-`;
-
-
-// 💬 Endpoint czatu
+// =========================================================
+// 💬 ENDPOINT: CZAT GPT (wersja skrócona)
+// =========================================================
 app.post("/api/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
@@ -200,10 +127,7 @@ app.post("/api/chat", async (req, res) => {
       {
         role: "system",
         content: `${systemPrompt}
-
-Tryb: DomAdvisor Premium — generuj raporty eksperckie o długości ok. 1000–1500 słów (krótsza wersja do czatu).  
-Zachowaj strukturę raportu, dane źródłowe (NBP, AMRON, Otodom Analytics, Q4 2025),  
-i ton eksperta premium.`,
+Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, skrócona wersja czatowa). Zachowaj strukturę raportu i ton eksperta premium.`,
       },
       ...(history || []),
       { role: "user", content: message },
@@ -214,21 +138,85 @@ i ton eksperta premium.`,
       messages,
       max_tokens: 4000,
       temperature: 0.6,
-      presence_penalty: -0.2,
-      frequency_penalty: -0.4,
     });
 
     const response = completion.choices[0].message.content;
-    console.log("✅ Raport wygenerowany — długość:", response.length, "znaków");
+    console.log("✅ Raport czatowy wygenerowany — długość:", response.length, "znaków");
     res.json({ success: true, response });
-
   } catch (error) {
-    console.error("❌ Błąd API:", error);
+    console.error("❌ Błąd API czatu:", error);
     res.json({ success: false, error: error.message });
   }
 });
 
+// =========================================================
+// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail)
+// =========================================================
+app.post("/api/send-report", async (req, res) => {
+  try {
+    const { userEmail, propertyData } = req.body;
 
-// 🚀 Start serwera
+    if (!userEmail || !propertyData)
+      return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
+
+    // 🧠 Generowanie raportu (GPT-4o)
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `Jesteś ekspertem DomAdvisor. Generuj pełny raport ekspercki (6–10 tys. znaków) na podstawie danych ogłoszenia.`,
+        },
+        { role: "user", content: propertyData },
+      ],
+      temperature: 0.7,
+      max_tokens: 7000,
+    });
+
+    const reportText = completion.choices[0].message.content;
+
+    // 📄 Tworzenie PDF
+    const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
+    const doc = new PDFDocument();
+    doc.pipe(fs.createWriteStream(pdfPath));
+    doc.fontSize(20).text("DomAdvisor – Raport Ekspercki", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(12).text(reportText, { align: "left" });
+    doc.end();
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // ✉️ Wysyłka raportu e-mail (SMTP Home.pl)
+    const transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"DomAdvisor" <${process.env.MAIL_USER}>`,
+      to: userEmail,
+      subject: "Twój Raport Ekspercki DomAdvisor",
+      text: "Dziękujemy za skorzystanie z DomAdvisor. Raport znajdziesz w załączniku.",
+      attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }],
+    });
+
+    if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
+
+    console.log(`📧 Raport wysłany do: ${userEmail}`);
+    res.json({ message: "✅ Dziękujemy, raport zostanie wysłany na Twój e-mail." });
+  } catch (error) {
+    console.error("❌ Błąd wysyłki raportu:", error);
+    res.status(500).json({ error: "Nie udało się wysłać raportu e-mailem." });
+  }
+});
+
+// =========================================================
+// 🚀 START SERWERA
+// =========================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
