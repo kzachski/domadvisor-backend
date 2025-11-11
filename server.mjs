@@ -150,7 +150,7 @@ Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, s
 });
 
 // =========================================================
-// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail)
+// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail, wersja premium)
 // =========================================================
 app.post("/api/send-report", async (req, res) => {
   try {
@@ -159,67 +159,101 @@ app.post("/api/send-report", async (req, res) => {
     if (!userEmail || !propertyData)
       return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
 
-    // 🧠 Generowanie raportu (GPT-4o)
+    console.log("📄 Generowanie raportu eksperckiego dla:", userEmail);
+
+    // 🧠 Generowanie pełnego raportu (GPT-4o)
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: `Jesteś ekspertem DomAdvisor. Generuj pełny raport ekspercki (6–10 tys. znaków) na podstawie danych ogłoszenia.`,
+          content: `
+Jesteś zespołem ekspertów DomAdvisor (Jakub i Magdalena). Przygotowuj profesjonalne raporty eksperckie dla nieruchomości w Polsce, oparte na danych rynkowych (NBP, Otodom, AMRON, GUS).
+
+Raport ma mieć długość 9000–12000 znaków i strukturę:
+
+1️⃣ STRESZCZENIE RAPORTU (krótkie podsumowanie: lokalizacja, typ nieruchomości, główne wnioski)
+
+2️⃣ ANALIZA FINANSOWA (Jakub)
+- porównanie ceny ofertowej do średniej rynkowej w danej dzielnicy (na podstawie danych z Q4 2025)
+- cap rate, ROI, rentowność, koszty transakcyjne
+- analiza opłacalności (flip / wynajem)
+- rekomendacje negocjacyjne
+
+3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)
+- układ funkcjonalny, światło, akustyka, ergonomia, design
+- ocena potencjału liftingu A/B/C (koszty i wpływ na wartość)
+- rekomendacje modernizacji
+
+4️⃣ RYZYKA (techniczne, rynkowe, prawne)
+
+5️⃣ REKOMENDACJA KOŃCOWA
+- decyzja: WARTO / NEGOCJUJ / ODPUŚĆ
+- uzasadnienie finansowe i estetyczne
+- plan działań 30/60/90 dni
+
+Styl: rzeczowy, precyzyjny, język ekspercki (bez ozdobników i emotikon).
+Każdy z ekspertów podpisuje się w swoim akapicie.
+          `,
         },
         { role: "user", content: propertyData },
       ],
-      temperature: 0.7,
-      max_tokens: 7000,
+      temperature: 0.6,
+      max_tokens: 11000,
     });
 
-    const reportText = completion.choices[0].message.content;
+    const reportText = completion.choices[0].message.content || "";
+    console.log("✅ Raport wygenerowany, długość:", reportText.length, "znaków");
 
-// 📄 Tworzenie PDF z polskimi znakami i estetycznym formatowaniem
-const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
-const doc = new PDFDocument({
-  margin: 50,
-  size: "A4",
-  info: {
-    Title: "DomAdvisor – Raport Ekspercki",
-    Author: "DomAdvisor AI",
-  },
-});
+    // =========================================================
+    // 📄 Tworzenie PDF z poprawnym fontem i bez markdown
+    // =========================================================
+    const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
+    const doc = new PDFDocument({
+      margin: 50,
+      size: "A4",
+      info: {
+        Title: "DomAdvisor – Raport Ekspercki",
+        Author: "DomAdvisor AI",
+      },
+    });
 
-const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
-if (fs.existsSync(fontPath)) {
-  doc.font(fontPath);
-} else {
-  console.warn("⚠️ Brak fontu NotoSans-Regular.ttf – używam domyślnej czcionki.");
-}
+    // ✅ Font z polskimi znakami
+    const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
+    if (fs.existsSync(fontPath)) {
+      doc.font(fontPath);
+      console.log("✅ Załadowano font NotoSans-Regular.ttf");
+    } else {
+      console.warn("⚠️ Brak fontu NotoSans-Regular.ttf – używam domyślnej czcionki.");
+    }
 
-doc.pipe(fs.createWriteStream(pdfPath));
+    doc.pipe(fs.createWriteStream(pdfPath));
 
-// 🔹 Nagłówek
-doc.fontSize(20).fillColor("#333333").text("DomAdvisor – Raport Ekspercki", {
-  align: "center",
-});
-doc.moveDown(1);
+    // 🔹 Nagłówek PDF
+    doc
+      .fontSize(22)
+      .fillColor("#222222")
+      .text("DomAdvisor – Raport Ekspercki", { align: "center" });
+    doc.moveDown(1.2);
 
-// 🔹 Treść raportu
-doc
-  .fontSize(12)
-  .fillColor("#000000")
-  .text(reportText, {
-    align: "justify",
-    lineGap: 6,
-  });
+    // 🔹 Treść raportu (oczyszczony z Markdown)
+    const cleanText = reportText
+      .replace(/[#*_`]/g, "") // usuwa markdown
+      .replace(/\n{3,}/g, "\n\n"); // poprawia odstępy
 
-doc.end();
+    doc.fontSize(12).fillColor("#000000").text(cleanText, {
+      align: "justify",
+      lineGap: 6,
+    });
 
-// ✨ Daj chwilę na zapis pliku przed wysyłką mailem
-await new Promise((resolve) => setTimeout(resolve, 2000));
+    doc.end();
 
+    // ✨ Daj chwilę na zapis pliku przed wysyłką
+    await new Promise((resolve) => setTimeout(resolve, 2500));
 
-
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // ✉️ Wysyłka raportu e-mail (SMTP Home.pl)
+    // =========================================================
+    // ✉️ Wysyłka e-mail (SMTP Home.pl)
+    // =========================================================
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
@@ -233,20 +267,21 @@ await new Promise((resolve) => setTimeout(resolve, 2000));
     await transporter.sendMail({
       from: `"DomAdvisor" <${process.env.MAIL_USER}>`,
       to: userEmail,
-      subject: "Twój Raport Ekspercki DomAdvisor",
-      text: "Dziękujemy za skorzystanie z DomAdvisor. Raport znajdziesz w załączniku.",
+      subject: "Twój Raport Ekspercki DomAdvisor (Premium Edition)",
+      text: "Dziękujemy za skorzystanie z DomAdvisor Premium. Raport w załączniku zawiera szczegółową analizę finansową i estetyczną przygotowaną przez Jakuba i Magdalenę.",
       attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }],
     });
 
     if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
 
     console.log(`📧 Raport wysłany do: ${userEmail}`);
-    res.json({ message: "✅ Dziękujemy, raport zostanie wysłany na Twój e-mail." });
+    res.json({ message: "✅ Raport ekspercki został wysłany na Twój e-mail." });
   } catch (error) {
     console.error("❌ Błąd wysyłki raportu:", error);
-    res.status(500).json({ error: "Nie udało się wysłać raportu e-mailem." });
+    res.status(500).json({ error: "Nie udało się wygenerować lub wysłać raportu." });
   }
 });
+
 
 // ============================================================
 // 🚀 START SERWERA (Render fix)
@@ -260,6 +295,7 @@ app.get("/", (req, res) => {
 // Render wymaga nasłuchiwania na process.env.PORT i adresie 0.0.0.0
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
+
 
 
 
