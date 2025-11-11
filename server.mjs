@@ -175,14 +175,39 @@ app.post("/api/send-report", async (req, res) => {
 
     const reportText = completion.choices[0].message.content;
 
-    // 📄 Tworzenie PDF
-    const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
-    const doc = new PDFDocument();
-    doc.pipe(fs.createWriteStream(pdfPath));
-    doc.fontSize(20).text("DomAdvisor – Raport Ekspercki", { align: "center" });
-    doc.moveDown();
-    doc.fontSize(12).text(reportText, { align: "left" });
-    doc.end();
+    // 📄 Tworzenie PDF (UTF-8 + formatowanie)
+const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
+const doc = new PDFDocument({
+  margin: 50,
+});
+
+const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
+if (fs.existsSync(fontPath)) {
+  doc.font(fontPath);
+} else {
+  console.warn("⚠️ Brak fontu NotoSans-Regular.ttf — używam domyślnego.");
+}
+
+doc.pipe(fs.createWriteStream(pdfPath));
+
+// 🔹 Nagłówek
+doc
+  .fontSize(22)
+  .fillColor("#D4AF37")
+  .text("DomAdvisor – Raport Ekspercki", { align: "center" });
+doc.moveDown(1);
+
+// 🔹 Treść raportu — formatowanie paragrafów
+doc.fontSize(12).fillColor("#000000");
+
+const paragraphs = reportText.split(/\n+/);
+for (const para of paragraphs) {
+  doc.text(para.trim(), { align: "justify", paragraphGap: 10 });
+  doc.moveDown(0.5);
+}
+
+doc.end();
+
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -227,6 +252,7 @@ app.get("/", (req, res) => {
 // Render wymaga nasłuchiwania na process.env.PORT i adresie 0.0.0.0
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
+
 
 
 
