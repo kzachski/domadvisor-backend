@@ -137,7 +137,7 @@ Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, s
   model: "gpt-4.1",
 
       messages,
-      max_tokens: 4000,
+      max_tokens: 13000,
       temperature: 0.6,
     });
 
@@ -151,7 +151,7 @@ Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, s
 });
 
 // =========================================================
-// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail, wersja premium)
+// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail, wersja premium GPT-4.1)
 // =========================================================
 app.post("/api/send-report", async (req, res) => {
   try {
@@ -162,52 +162,67 @@ app.post("/api/send-report", async (req, res) => {
 
     console.log("📄 Generowanie raportu eksperckiego dla:", userEmail);
 
-    // 🧠 Generowanie pełnego raportu (GPT-4o)
+    // 🧠 Generowanie pełnego raportu eksperckiego (GPT-4.1)
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4.1",
       messages: [
         {
           role: "system",
           content: `
-Jesteś zespołem ekspertów DomAdvisor (Jakub i Magdalena). Przygotowuj profesjonalne raporty eksperckie dla nieruchomości w Polsce, oparte na danych rynkowych (NBP, Otodom, AMRON, GUS).
+Jesteś zespołem ekspertów DomAdvisor (Jakub i Magdalena). Przygotowujesz profesjonalne raporty eksperckie dotyczące nieruchomości w Polsce, bazując na danych z NBP, Otodom Analytics, AMRON-SARFiN i GUS.
 
-Raport ma mieć długość 9000–12000 znaków i strukturę:
+🎯 CEL:
+Stwórz pełny raport analityczny (9000–12000 znaków) dotyczący przesłanej nieruchomości. Raport ma być opracowaniem eksperckim, gotowym do sprzedaży jako dokument PDF klasy premium.
 
-1️⃣ STRESZCZENIE RAPORTU (krótkie podsumowanie: lokalizacja, typ nieruchomości, główne wnioski)
+📊 STRUKTURA RAPORTU:
 
-2️⃣ ANALIZA FINANSOWA (Jakub)
-- porównanie ceny ofertowej do średniej rynkowej w danej dzielnicy (na podstawie danych z Q4 2025)
-- cap rate, ROI, rentowność, koszty transakcyjne
-- analiza opłacalności (flip / wynajem)
-- rekomendacje negocjacyjne
+1️⃣ STRESZCZENIE RAPORTU  
+Krótki opis oferty (lokalizacja, metraż, typ nieruchomości, stan, kluczowe wnioski).
 
-3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)
-- układ funkcjonalny, światło, akustyka, ergonomia, design
-- ocena potencjału liftingu A/B/C (koszty i wpływ na wartość)
-- rekomendacje modernizacji
+2️⃣ ANALIZA FINANSOWA (Jakub – ekspert inwestycyjny)  
+- Porównanie ceny ofertowej do średniej rynkowej w danej dzielnicy (dane Q4 2025 lub najnowsze).  
+- Wyliczenia wskaźników: cena/m², cap rate, ROI, cash-on-cash, koszty transakcyjne, marża przy flipie.  
+- Wnioski inwestycyjne: opłacalność, zwrot, potencjał wzrostu wartości.  
+- Rekomendacje negocjacyjne i strategie zakupu.
 
-4️⃣ RYZYKA (techniczne, rynkowe, prawne)
+3️⃣ ANALIZA FUNKCJONALNO–ESTETYCZNA (Magdalena – architekt wnętrz, home stager)  
+- Układ funkcjonalny, światło, ergonomia, akustyka, estetyka wnętrza.  
+- Potencjał liftingów A/B/C – opisz 3 warianty modernizacji (koszty i wpływ na wartość).  
+- Rekomendacje wizualne i stagingowe dla sprzedaży lub najmu.
 
-5️⃣ REKOMENDACJA KOŃCOWA
-- decyzja: WARTO / NEGOCJUJ / ODPUŚĆ
-- uzasadnienie finansowe i estetyczne
-- plan działań 30/60/90 dni
+4️⃣ RYZYKA  
+- Techniczne (instalacje, konstrukcja, budynek).  
+- Rynkowe (lokalne trendy, popyt/podaż, sezonowość).  
+- Prawne (własność, współwłasność, obciążenia).
 
-Styl: rzeczowy, precyzyjny, język ekspercki (bez ozdobników i emotikon).
-Każdy z ekspertów podpisuje się w swoim akapicie.
+5️⃣ REKOMENDACJA KOŃCOWA  
+- Decyzja: WARTO / NEGOCJUJ / ODPUŚĆ  
+- Uzasadnienie finansowe i estetyczne.  
+- Plan działań 30/60/90 dni.
+
+💬 STYL I TON:
+Używaj języka eksperckiego – rzeczowego, precyzyjnego i pozbawionego ozdobników.  
+Każdy z ekspertów (Jakub i Magdalena) podpisuje się w swoim akapicie.  
+Nie używaj emotikon, ramek ani markdown.  
+Raport ma przypominać profesjonalne opracowanie rzeczoznawcy majątkowego.
+
+📈 JAKOŚĆ PREMIUM:
+Raport ma być gotowy do sprzedaży (jako plik PDF) i odpowiadać poziomem merytorycznym analizom DomAdvisor GPT’S.  
+W treści stosuj liczby, wskaźniki i odniesienia do źródeł danych.  
+Uwzględnij realne widełki cenowe, wskaźniki i rynki porównawcze (Trójmiasto, Warszawa, Kraków, Wrocław itp.).
           `,
         },
         { role: "user", content: propertyData },
       ],
       temperature: 0.6,
-      max_tokens: 11000,
+      max_tokens: 13000,
     });
 
     const reportText = completion.choices[0].message.content || "";
-    console.log("✅ Raport wygenerowany, długość:", reportText.length, "znaków");
+    console.log(`✅ Raport wygenerowany (${reportText.length} znaków) — model: gpt-4.1`);
 
     // =========================================================
-    // 📄 Tworzenie PDF z poprawnym fontem i bez markdown
+    // 📄 Tworzenie PDF z poprawnym fontem i formatowaniem
     // =========================================================
     const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
     const doc = new PDFDocument({
@@ -219,7 +234,7 @@ Każdy z ekspertów podpisuje się w swoim akapicie.
       },
     });
 
-    // ✅ Font z polskimi znakami
+    // ✅ Font z polskimi znakami (NotoSans)
     const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
     if (fs.existsSync(fontPath)) {
       doc.font(fontPath);
@@ -235,9 +250,14 @@ Każdy z ekspertów podpisuje się w swoim akapicie.
       .fontSize(22)
       .fillColor("#222222")
       .text("DomAdvisor – Raport Ekspercki", { align: "center" });
-    doc.moveDown(1.2);
+    doc.moveDown(0.6);
+    doc
+      .fontSize(10)
+      .fillColor("#555555")
+      .text("DomAdvisor Premium • Raport ekspercki 2025", { align: "center" });
+    doc.moveDown(1);
 
-    // 🔹 Treść raportu (oczyszczony z Markdown)
+    // 🔹 Treść raportu (oczyszczona z Markdown)
     const cleanText = reportText
       .replace(/[#*_`]/g, "") // usuwa markdown
       .replace(/\n{3,}/g, "\n\n"); // poprawia odstępy
@@ -269,10 +289,11 @@ Każdy z ekspertów podpisuje się w swoim akapicie.
       from: `"DomAdvisor" <${process.env.MAIL_USER}>`,
       to: userEmail,
       subject: "Twój Raport Ekspercki DomAdvisor (Premium Edition)",
-      text: "Dziękujemy za skorzystanie z DomAdvisor Premium. Raport w załączniku zawiera szczegółową analizę finansową i estetyczną przygotowaną przez Jakuba i Magdalenę.",
+      text: "Dziękujemy za skorzystanie z DomAdvisor Premium. W załączniku znajdziesz szczegółowy raport finansowo-estetyczny przygotowany przez Jakuba i Magdalenę.",
       attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }],
     });
 
+    // Usuń plik po wysyłce
     if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
 
     console.log(`📧 Raport wysłany do: ${userEmail}`);
@@ -282,6 +303,7 @@ Każdy z ekspertów podpisuje się w swoim akapicie.
     res.status(500).json({ error: "Nie udało się wygenerować lub wysłać raportu." });
   }
 });
+
 
 
 // ============================================================
@@ -296,6 +318,7 @@ app.get("/", (req, res) => {
 // Render wymaga nasłuchiwania na process.env.PORT i adresie 0.0.0.0
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
+
 
 
 
