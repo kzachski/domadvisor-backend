@@ -82,7 +82,18 @@ nazwisko → tylko inicjał.
 
 ---
 
+ŹRÓDŁA I OKRES ANALIZY
+Zawsze korzystaj z najnowszych dostępnych danych:
 
+- NBP – Biuletyny cen transakcyjnych (ostatni pełny kwartał)  
+- Otodom Analytics – dane ofertowe i transakcyjne (ostatni miesiąc lub kwartał)  
+- AMRON-SARFiN – raporty kwartalne  
+- Dane lokalne – Poznań, Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Szczecin  
+
+Jeśli dane nie są dostępne — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
+W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowszy dostępny).
+
+---`;
 
 // =========================================================
 // 💬 ENDPOINT: CZAT GPT (wersja skrócona)
@@ -94,8 +105,7 @@ app.post("/api/chat", async (req, res) => {
     const messages = [
       {
         role: "system",
-        content: 
-        ${systemPrompt}
+        content: `${systemPrompt}
 Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, skrócona wersja czatowa). Zachowaj strukturę raportu i ton eksperta premium.`,
       },
       ...(history || []),
@@ -143,49 +153,6 @@ app.post("/api/send-report", async (req, res) => {
         content: `
 Jesteś zespołem ekspertów DomAdvisor (Jakub i Magdalena). 
 Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce, bazując na danych z NBP, Otodom Analytics, AMRON-SARFiN i GUS.
-  ŹRÓDŁA I OKRES ANALIZY
-Zawsze korzystaj z najnowszych dostępnych danych:
-
-- NBP – Biuletyny cen transakcyjnych (ostatni pełny kwartał)  
-- Otodom Analytics – dane ofertowe i transakcyjne (ostatni miesiąc lub kwartał)  
-- AMRON-SARFiN – raporty kwartalne  
-- Dane lokalne – Poznań, Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Szczecin  
-
----
-
-WALIDACJA DANYCH RYNKOWYCH (2025–2026)
-Raporty DomAdvisor muszą bazować na realistycznych widełkach cenowych dla głównych rynków mieszkaniowych w Polsce.
-Nigdy nie podawaj wartości nierealnych lub oderwanych od kontekstu kwartalnego.
-
-Dane referencyjne (Q4 2025 – najnowsze dostępne z NBP, Otodom Analytics, AMRON-SARFiN):
-
-🔹 WARSZAWA – 16 000–22 000 zł/m² (centrum 20–25 tys., obrzeża 13–15 tys.)  
-🔹 KRAKÓW – 14 000–18 000 zł/m²  
-🔹 WROCŁAW – 12 500–16 000 zł/m²  
-🔹 GDAŃSK – 14 000–17 000 zł/m²  
-  • Żabianka / Przymorze / Oliwa – 14 000–15 500 zł/m²  
-  • Śródmieście / Brzeźno – 15 000–17 000 zł/m²  
-  • Orunia / Łostowice – 11 000–13 000 zł/m²  
-🔹 POZNAŃ – 11 500–14 500 zł/m²  
-🔹 ŁÓDŹ – 9 000–12 000 zł/m²  
-🔹 KATOWICE – 9 500–12 500 zł/m²  
-🔹 SZCZECIN – 10 500–13 500 zł/m²  
-🔹 LUBLIN – 10 000–12 500 zł/m²  
-🔹 BYDGOSZCZ / TORUŃ – 9 000–11 500 zł/m²  
-🔹 RZESZÓW / BIAŁYSTOK / OLSZTYN – 8 500–11 000 zł/m²  
-
-Jeśli nieruchomość ma wyjątkowe cechy (widok, luksusowy standard, prestiżowa lokalizacja) – możesz zastosować premię maksymalnie +10–15% względem górnej granicy widełek.
-Nie używaj wartości niższych niż dolne widełki dla danej lokalizacji.
-Nie interpoluj z błędnych danych archiwalnych (np. sprzed 2024 roku).
-
----
-
-Jeśli raport dotyczy mniejszej miejscowości, przyjmij wartości odniesienia z najbliższego dużego miasta wojewódzkiego (tego samego regionu). 
-Nie interpoluj między różnymi województwami ani między rynkami o odmiennym profilu cenowym.
-
-W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowszy dostępny).
-
----`;
 
 📅 AKTUALNOŚĆ DANYCH
 Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
@@ -296,7 +263,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
-
-
-
-
