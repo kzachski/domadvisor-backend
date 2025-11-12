@@ -172,7 +172,7 @@ app.post("/api/send-report", async (req, res) => {
     const month = now.toLocaleString("pl-PL", { month: "long" });
     const year = now.getFullYear();
     const quarter = Math.ceil((now.getMonth() + 1) / 3);
-    const currentQuarter = `Q${quarter} ${year}`;
+    const currentQuarter = `Q${quarter} ${year}`;;
 
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
@@ -293,5 +293,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
