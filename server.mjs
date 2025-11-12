@@ -212,8 +212,6 @@ W treści stosuj liczby, wskaźniki i odniesienia do źródeł danych.
 Uwzględnij realne widełki cenowe, wskaźniki i rynki porównawcze (Trójmiasto, Warszawa, Kraków, Wrocław itp.).
           `,
         },
-{
-  role: "user",
   {
   role: "user",
   content: `${propertyData}
@@ -340,6 +338,7 @@ app.get("/", (req, res) => {
 // Render wymaga nasłuchiwania na process.env.PORT i adresie 0.0.0.0
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
+
 
 
 
