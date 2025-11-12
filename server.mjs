@@ -135,8 +135,8 @@ app.post("/api/chat", async (req, res) => {
     const messages = [
       {
         role: "system",
-        content: `${systemPrompt}
-Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, skrócona wersja czatowa). Zachowaj strukturę raportu i ton eksperta premium.`,
+       content: systemPrompt + "\nTryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, skrócona wersja czatowa). Zachowaj strukturę raportu i ton eksperta premium.",
+
       },
       ...(history || []),
       { role: "user", content: message },
@@ -293,4 +293,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
