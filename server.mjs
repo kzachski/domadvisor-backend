@@ -134,8 +134,7 @@ Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, s
     ];
 
     const completion = await openai.chat.completions.create({
-  model: "gpt-4.1",
-
+      model: "gpt-4.1",
       messages,
       max_tokens: 13000,
       temperature: 0.6,
@@ -173,134 +172,69 @@ Jesteś zespołem ekspertów DomAdvisor (Jakub i Magdalena). Przygotowujesz prof
 
 🎯 CEL:
 Stwórz pełny raport analityczny (9000–12000 znaków) dotyczący przesłanej nieruchomości. Raport ma być opracowaniem eksperckim, gotowym do sprzedaży jako dokument PDF klasy premium.
-
-📊 STRUKTURA RAPORTU:
-
-1️⃣ STRESZCZENIE RAPORTU  
-Krótki opis oferty (lokalizacja, metraż, typ nieruchomości, stan, kluczowe wnioski).
-
-2️⃣ ANALIZA FINANSOWA (Jakub – ekspert inwestycyjny)  
-- Porównanie ceny ofertowej do średniej rynkowej w danej dzielnicy (dane Q4 2025 lub najnowsze).  
-- Wyliczenia wskaźników: cena/m², cap rate, ROI, cash-on-cash, koszty transakcyjne, marża przy flipie.  
-- Wnioski inwestycyjne: opłacalność, zwrot, potencjał wzrostu wartości.  
-- Rekomendacje negocjacyjne i strategie zakupu.
-
-3️⃣ ANALIZA FUNKCJONALNO–ESTETYCZNA (Magdalena – architekt wnętrz, home stager)  
-- Układ funkcjonalny, światło, ergonomia, akustyka, estetyka wnętrza.  
-- Potencjał liftingów A/B/C – opisz 3 warianty modernizacji (koszty i wpływ na wartość).  
-- Rekomendacje wizualne i stagingowe dla sprzedaży lub najmu.
-
-4️⃣ RYZYKA  
-- Techniczne (instalacje, konstrukcja, budynek).  
-- Rynkowe (lokalne trendy, popyt/podaż, sezonowość).  
-- Prawne (własność, współwłasność, obciążenia).
-
-5️⃣ REKOMENDACJA KOŃCOWA  
-- Decyzja: WARTO / NEGOCJUJ / ODPUŚĆ  
-- Uzasadnienie finansowe i estetyczne.  
-- Plan działań 30/60/90 dni.
-
-💬 STYL I TON:
-Używaj języka eksperckiego – rzeczowego, precyzyjnego i pozbawionego ozdobników.  
-Każdy z ekspertów (Jakub i Magdalena) podpisuje się w swoim akapicie.  
-Nie używaj emotikon, ramek ani markdown.  
-Raport ma przypominać profesjonalne opracowanie rzeczoznawcy majątkowego.
-
-📈 JAKOŚĆ PREMIUM:
-Raport ma być gotowy do sprzedaży (jako plik PDF) i odpowiadać poziomem merytorycznym analizom DomAdvisor GPT’S.  
-W treści stosuj liczby, wskaźniki i odniesienia do źródeł danych.  
-Uwzględnij realne widełki cenowe, wskaźniki i rynki porównawcze (Trójmiasto, Warszawa, Kraków, Wrocław itp.).
           `,
         },
-{
-  role: "user",
-  content: propertyData,
-},
+        {
+          role: "user",
+          content: `${propertyData}
 
+Upewnij się, że raport DomAdvisor zawiera WSZYSTKIE następujące sekcje (w tej kolejności i pełnym rozwinięciu):
 
-const completion = await openai.chat.completions.create({
-  model: "gpt-4.1",
-  messages,
-  temperature: 0.6,
-  max_tokens: 13000,
-});
+1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️⃣ ANALIZA FINANSOWA (Jakub)  
+3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
+4️⃣ RYZYKA  
+5️⃣ REKOMENDACJA KOŃCOWA  
+6️⃣ PLAN 30 / 60 / 90 DNI  
+7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA  
+
+Każda sekcja musi być kompletna, szczegółowa i rozbudowana – minimum kilka akapitów.  
+Nie wolno pomijać ani łączyć sekcji.  
+Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
+        },
+      ],
+      temperature: 0.6,
+      max_tokens: 13000,
+    });
 
     const reportText = completion.choices[0].message.content || "";
     console.log(`✅ Raport wygenerowany (${reportText.length} znaków) — model: gpt-4.1`);
 
     // =========================================================
-    // 📄 Tworzenie PDF z poprawnym fontem i formatowaniem
+    // 📄 Tworzenie PDF
     // =========================================================
     const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
-    const doc = new PDFDocument({
-      margin: 50,
-      size: "A4",
-      info: {
-        Title: "DomAdvisor – Raport Ekspercki",
-        Author: "DomAdvisor AI",
-      },
-    });
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
 
-    // ✅ Font z polskimi znakami (NotoSans)
     const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
-    if (fs.existsSync(fontPath)) {
-      doc.font(fontPath);
-      console.log("✅ Załadowano font NotoSans-Regular.ttf");
-    } else {
-      console.warn("⚠️ Brak fontu NotoSans-Regular.ttf – używam domyślnej czcionki.");
-    }
+    if (fs.existsSync(fontPath)) doc.font(fontPath);
 
     doc.pipe(fs.createWriteStream(pdfPath));
-
-    // 🔹 Nagłówek PDF
-    doc
-      .fontSize(22)
-      .fillColor("#222222")
-      .text("DomAdvisor – Raport Ekspercki", { align: "center" });
-    doc.moveDown(0.6);
-    doc
-      .fontSize(10)
-      .fillColor("#555555")
-      .text("DomAdvisor Premium • Raport ekspercki 2025", { align: "center" });
+    doc.fontSize(22).text("DomAdvisor – Raport Ekspercki", { align: "center" });
     doc.moveDown(1);
-
-    // 🔹 Treść raportu (oczyszczona z Markdown)
-    const cleanText = reportText
-      .replace(/[#*_`]/g, "") // usuwa markdown
-      .replace(/\n{3,}/g, "\n\n"); // poprawia odstępy
-
-    doc.fontSize(12).fillColor("#000000").text(cleanText, {
-      align: "justify",
-      lineGap: 6,
-    });
-
+    doc.fontSize(12).text(reportText, { align: "justify" });
     doc.end();
 
-    // ✨ Daj chwilę na zapis pliku przed wysyłką
-    await new Promise((resolve) => setTimeout(resolve, 2500));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // =========================================================
-    // ✉️ Wysyłka e-mail (SMTP Home.pl)
+    // ✉️ Wysyłka e-mail
     // =========================================================
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
       secure: true,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
+      auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
     });
 
     await transporter.sendMail({
       from: `"DomAdvisor" <${process.env.MAIL_USER}>`,
       to: userEmail,
       subject: "Twój Raport Ekspercki DomAdvisor (Premium Edition)",
-      text: "Dziękujemy za skorzystanie z DomAdvisor Premium. W załączniku znajdziesz szczegółowy raport finansowo-estetyczny przygotowany przez Jakuba i Magdalenę.",
+      text: "W załączniku znajduje się Twój raport ekspercki DomAdvisor.",
       attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }],
     });
 
-    // Usuń plik po wysyłce
     if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
 
     console.log(`📧 Raport wysłany do: ${userEmail}`);
@@ -311,36 +245,14 @@ const completion = await openai.chat.completions.create({
   }
 });
 
-
-
 // ============================================================
-// 🚀 START SERWERA (Render fix)
+// 🚀 START SERWERA
 // ============================================================
-
-// Domyślny endpoint testowy
 app.get("/", (req, res) => {
   res.send("✅ DomAdvisor backend działa poprawnie. Użyj POST /api/send-report");
 });
 
-// Render wymaga nasłuchiwania na process.env.PORT i adresie 0.0.0.0
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+app.listen(PORT, "0.0.0.0", () =>
+  console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
+);
