@@ -1,6 +1,6 @@
 // =========================================================
-// 🏠 DOMADVISOR PREMIUM BACKEND (Render Ready)
-// GPT-4o + SMTP (home.pl) + PDF + API Chat + Safe Dates
+// 🏠 DOMADVISOR PREMIUM BACKEND (Final 2025 Clean Edition)
+// GPT-4.1 + SMTP (home.pl) + PDF + API Chat
 // =========================================================
 
 import express from "express";
@@ -13,7 +13,7 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 
-// 🔐 Załaduj zmienne środowiskowe (.env lokalnie lub Render Environment)
+// 🔐 Załaduj zmienne środowiskowe (.env)
 dotenv.config();
 
 const app = express();
@@ -25,88 +25,24 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// 🧠 SYSTEM PROMPT – zachowanie DomAdvisor
-const systemPrompt = String.raw`
-DOMADVISOR – SYSTEM PROMPT (v3.3 / 2025–2026 Ready)
-
-ZACHOWANIE STARTOWE
-Komunikat "Witaj w DomAdvisor…" traktuj jako systemowy.
-Nie komentuj go i nie odpowiadaj.
-Twoja pierwsza wiadomość do użytkownika to zawsze blok MENU_START.
-
-MENU_START (dokładny tekst)
-
-Możemy przygotować dla Ciebie jedną z poniższych analiz:
-
-1. Poszukujesz dla siebie nieruchomości – przegląd rynku i rekomendacja dopasowana do potrzeb.  
-2. Znalazłeś ogłoszenie nieruchomości na sprzedaż – błyskawiczna analiza finansowa i estetyczna.  
-3. Znalazłeś ogłoszenie nieruchomości na wynajem – analiza opłacalności i standardu.  
-4. Szukasz mieszkania na wynajem – przegląd rynku i rekomendacje dopasowane do Twojego budżetu.  
-5. Chcesz sprzedać nieruchomość – wsparcie w przygotowaniu ogłoszenia.  
-6. Ocena mieszkania pod flipa – koszt remontu, ROI i potencjał sprzedaży.  
-7. Chcesz wynająć mieszkanie, ale nie możesz znaleźć najemcy – analiza i rekomendacje optymalizacyjne.  
-8. Optymalizacja najmu – trzy warianty liftingów A/B/C z kosztami i wpływem na przychód.
-
-Aby wrócić do menu głównego, wpisz: 0.
-
----
-
-LOGIKA NAWIGACJI
-Wejście 1–8 → przejście do wybranego modułu.
-Komendy "0", "menu", "powrot", "zmientemat", "wrocdopoczatku", "p" → natychmiast pokazują blok MENU_START (bez komentarzy).
-Komenda powrotu działa zawsze.
-
----
-
-TOŻSAMOŚĆ I STYL
-Zespół DomAdvisor AI:
-
-Jakub – ekspert ds. finansów, ROI, cap rate, flipów, kredytów i strategii inwestycyjnych.  
-Magdalena – architekt wnętrz i home-stager, ocenia układ, światło, ergonomię, lifting A/B/C oraz wpływ estetyki na wartość nieruchomości.
-
-Styl komunikacji:
-- ton konsultacyjny premium, profesjonalny i spokojny,  
-- język precyzyjny, ale zrozumiały,  
-- zero emotikon, ramek, dygresji czy ozdobników,  
-- raporty mają wyglądać jak opracowania rzeczoznawcy / eksperta branżowego.
-
----
-
-ZASADY I RODO
-To nie jest porada inwestycyjna, prawna ani finansowa.  
-Kwestie formalne – radca prawny.  
-Nie zapisuj danych osobowych, adresowych ani numerów KW.  
-Jeśli użytkownik poda dane prywatne – zamaskuj je:  
-adres → tylko dzielnica,  
-nazwisko → tylko inicjał.
-
----
-
-ŹRÓDŁA I OKRES ANALIZY
-Zawsze korzystaj z najnowszych dostępnych danych:
-
-- NBP – Biuletyny cen transakcyjnych (ostatni pełny kwartał)  
-- Otodom Analytics – dane ofertowe i transakcyjne (ostatni miesiąc lub kwartał)  
-- AMRON-SARFiN – raporty kwartalne  
-- Dane lokalne – Poznań, Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Szczecin  
-
-Jeśli dane nie są dostępne — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
-W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowszy dostępny).
-
----`;
-
 // =========================================================
 // 💬 ENDPOINT: CZAT GPT (wersja skrócona)
 // =========================================================
 app.post("/api/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
-
     const messages = [
       {
         role: "system",
-        content: `${systemPrompt}
-Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, skrócona wersja czatowa). Zachowaj strukturę raportu i ton eksperta premium.`,
+        content: `
+DOMADVISOR — tryb premium czatowy.
+Generuj skrócone raporty eksperckie (1000–1500 słów), zachowując strukturę:
+1. Streszczenie / Dane ogólne
+2. Analiza finansowa
+3. Analiza funkcjonalno-estetyczna
+4. Ryzyka
+5. Rekomendacja końcowa
+Ton: ekspercki, konsultacyjny, bez ozdobników, bez emotikon.`,
       },
       ...(history || []),
       { role: "user", content: message },
@@ -129,7 +65,7 @@ Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, s
 });
 
 // =========================================================
-// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail, Safe Dates)
+// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail, Final Clean Edition)
 // =========================================================
 app.post("/api/send-report", async (req, res) => {
   try {
@@ -137,7 +73,7 @@ app.post("/api/send-report", async (req, res) => {
     if (!userEmail || !propertyData)
       return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
 
-    // 📅 Dynamiczne ustalenie aktualnego okresu (miesiąc + kwartał)
+    // 📅 Dynamiczne ustalenie okresu raportu
     const now = new Date();
     const month = now.toLocaleString("pl-PL", { month: "long" });
     const year = now.getFullYear();
@@ -146,43 +82,37 @@ app.post("/api/send-report", async (req, res) => {
 
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
-    // 🧠 Generowanie pełnego raportu eksperckiego
+    // 🧠 PROMPT SYSTEMOWY
     const messages = [
       {
         role: "system",
         content: `
-Jesteś zespołem ekspertów DomAdvisor (Jakub i Magdalena). 
-Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce, bazując na danych z NBP, Otodom Analytics, AMRON-SARFiN i GUS.
+Jesteś zespołem ekspertów DomAdvisor (Jakub – analityk finansowy i Magdalena – architekt wnętrz).
+Tworzysz raport ekspercki premium o nieruchomości na rynku polskim, bazując na danych:
+NBP, Otodom Analytics, AMRON-SARFiN i GUS.
 
-📅 AKTUALNOŚĆ DANYCH
-Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
-Nie wolno używać wcześniejszych dat (np. 2024, Q1 2025). 
-Jeśli dane kwartalne nie są jeszcze publikowane — interpoluj z poprzedniego kwartału, ale raport oznacz jako "${currentQuarter}".
+📅 AKTUALNOŚĆ:
+Dzisiejsza data: ${month} ${year}. Okres odniesienia: ${currentQuarter}.
+Nie powtarzaj tej frazy w każdej sekcji – może wystąpić tylko raz (na początku lub końcu raportu).
 
-🎯 CEL
-Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesłanej nieruchomości. 
-Zachowaj strukturę i ton eksperta.
+🎯 CEL:
+Przygotuj pełny raport (9000–12000 znaków) z podziałem na sekcje:
+1. Streszczenie oferty / Dane ogólne
+2. Analiza finansowa (Jakub)
+3. Analiza funkcjonalno-estetyczna (Magdalena)
+4. Ryzyka
+5. Rekomendacja końcowa
+6. Plan 30/60/90 dni
+7. Źródła danych i uwaga metodologiczna
 
-STRUKTURA
-1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
-2️⃣ ANALIZA FINANSOWA (Jakub)  
-3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
-4️⃣ RYZYKA  
-5️⃣ REKOMENDACJA KOŃCOWA  
-6️⃣ PLAN 30 / 60 / 90 DNI  
-7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
-
-STYL
-Ton ekspercki, rzeczowy, bez ozdobników. 
-Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".`,
+Ton: ekspercki, rzeczowy, bez ozdobników, bez markdown, bez emotikon.`,
       },
       {
         role: "user",
         content: `${propertyData}
 
-Upewnij się, że raport DomAdvisor zawiera wszystkie powyższe sekcje w pełnym rozwinięciu.
-Każda sekcja musi być kompletna, szczegółowa i rozbudowana – minimum kilka akapitów.
-Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
+Wstaw informację „Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)” tylko raz — najlepiej na końcu raportu (lub wyjątkowo w pierwszym akapicie).
+Usuń znaki specjalne przy cyfrach (np. 3️⃣ → 3., 1️7 → 17).`,
       },
     ];
 
@@ -195,14 +125,28 @@ Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
 
     let reportText = completion.choices[0].message.content || "";
 
-    // 🔍 AUTOKOREKTA DAT
+    // =========================================================
+    // 🧩 CZYSZCZENIE I AUTOKOREKTA (Final Unicode & Formatting Fix)
+    // =========================================================
     reportText = reportText
-      .replace(/20(1[0-9]|2[0-4])/g, `${year}`)
+      .replace(/([0-9])[️⃣⃣]/g, "$1.") // usuń emoji-cyfry
+      .replace(/[\uFE0F\u20E3\uFEFF\u200B-\u200D]/g, "") // usuń niewidoczne Unicode
+      .replace(/20(1[0-9]|2[0-4])/g, `${year}`) // popraw stare lata
       .replace(/Q[1-4]\s20(1[0-9]|2[0-4])/g, `${currentQuarter}`)
       .replace(/na dzień raportu.*?[0-9]{4}/gi, `na dzień raportu (${month} ${year})`)
-      .replace(/(I|II|III|IV)\s?kw\.\s?20[0-9]{2}/gi, `${currentQuarter}`);
+      .replace(/\s{2,}/g, " ") // usuń podwójne spacje
+      .replace(/[#*_`]/g, "") // usuń markdown
+      .replace(/([0-9])I\s/gi, "$1. ") // 3I → 3.
+      .replace(/(Okres odniesienia:.*?)(Okres odniesienia:)/gi, "$1"); // usuń powtórzenia
 
+    // jeśli fraza nie istnieje – dodaj na końcu
+    if (!/Okres odniesienia:/i.test(reportText)) {
+      reportText += `\n\nOkres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)`;
+    }
+
+    // =========================================================
     // 📄 Tworzenie PDF
+    // =========================================================
     const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
     const doc = new PDFDocument({ margin: 50, size: "A4" });
 
@@ -221,13 +165,15 @@ Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
       .text(`DomAdvisor Premium • ${month} ${year}`, { align: "center" });
     doc.moveDown(1);
 
-    const cleanText = reportText.replace(/[#*_`]/g, "").replace(/\n{3,}/g, "\n\n");
-    doc.fontSize(12).fillColor("#000").text(cleanText, { align: "justify", lineGap: 6 });
+    doc.fontSize(12).fillColor("#000").text(reportText, {
+      align: "justify",
+      lineGap: 6,
+    });
     doc.end();
 
     await new Promise((r) => setTimeout(r, 2000));
 
-    // ✉️ Wysyłka e-mail
+    // ✉️ MAIL
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
