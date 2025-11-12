@@ -212,7 +212,7 @@ W treści stosuj liczby, wskaźniki i odniesienia do źródeł danych.
 Uwzględnij realne widełki cenowe, wskaźniki i rynki porównawcze (Trójmiasto, Warszawa, Kraków, Wrocław itp.).
           `,
         },
-       {
+      {
   role: "user",
   content: `
 ${propertyData}
@@ -230,8 +230,9 @@ Upewnij się, że raport DomAdvisor zawiera WSZYSTKIE następujące sekcje (w te
 Każda sekcja musi być kompletna, szczegółowa i rozbudowana – minimum kilka akapitów.  
 Nie wolno pomijać ani łączyć sekcji.  
 Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.
-  `,
+`,
 },
+
 
       temperature: 0.6,
       max_tokens: 13000,
@@ -337,6 +338,7 @@ app.get("/", (req, res) => {
 // Render wymaga nasłuchiwania na process.env.PORT i adresie 0.0.0.0
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => console.log(`✅ DomAdvisor działa na porcie ${PORT}`));
+
 
 
 
