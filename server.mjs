@@ -88,42 +88,12 @@ Zawsze korzystaj z najnowszych dostępnych danych:
 - NBP – Biuletyny cen transakcyjnych (ostatni pełny kwartał)  
 - Otodom Analytics – dane ofertowe i transakcyjne (ostatni miesiąc lub kwartał)  
 - AMRON-SARFiN – raporty kwartalne  
-- Dane lokalne – Warszawa, Kraków, Wrocław, Poznań, Trójmiasto, Łódź, Katowice, Szczecin  
+- Dane lokalne – Poznań, Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Szczecin  
 
----
+Jeśli dane nie są dostępne — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
+W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowszy dostępny).
 
-WALIDACJA DANYCH RYNKOWYCH (2025–2026)
-Raporty DomAdvisor muszą bazować na realistycznych widełkach cenowych dla głównych rynków mieszkaniowych w Polsce.  
-Nigdy nie podawaj wartości nierealnych lub zaniżonych względem rzeczywistych danych kwartalnych.  
-Nie interpoluj danych sprzed 2024 roku.  
-
-Dane referencyjne (Q4 2025 – NBP / Otodom Analytics / AMRON-SARFiN):
-
-WARSZAWA – 16 000–22 000 zł/m² (centrum 20–25 tys., obrzeża 13–15 tys.)  
-KRAKÓW – 14 000–18 000 zł/m²  
-WROCŁAW – 12 500–16 000 zł/m²  
-GDAŃSK – 14 000–17 000 zł/m²  
-  • Żabianka / Przymorze / Oliwa – 14 000–15 500 zł/m²  
-  • Śródmieście / Brzeźno – 15 000–17 000 zł/m²  
-  • Orunia / Łostowice – 11 000–13 000 zł/m²  
-POZNAŃ – 11 500–14 500 zł/m²  
-ŁÓDŹ – 9 000–12 000 zł/m²  
-KATOWICE – 9 500–12 500 zł/m²  
-SZCZECIN – 10 500–13 500 zł/m²  
-LUBLIN – 10 000–12 500 zł/m²  
-BYDGOSZCZ / TORUŃ – 9 000–11 500 zł/m²  
-RZESZÓW / BIAŁYSTOK / OLSZTYN – 8 500–11 000 zł/m²  
-
-Jeśli nieruchomość ma wyjątkowe cechy (np. widok na morze, luksusowy standard, prestiżowa dzielnica)  
-— możesz zastosować premię maksymalnie +10–15% względem górnej granicy widełek.  
-Nie używaj wartości niższych niż dolne widełki dla danej lokalizacji.  
-
----
-
-W każdym raporcie podaj okres odniesienia tylko raz – najlepiej na końcu, np.:  
-„Okres odniesienia: Q4 2025 (najnowsze dane NBP i Otodom Analytics)”.  
----
-
+---`;
 
 // =========================================================
 // 💬 ENDPOINT: CZAT GPT (wersja skrócona)
@@ -135,8 +105,8 @@ app.post("/api/chat", async (req, res) => {
     const messages = [
       {
         role: "system",
-       content: systemPrompt + "\nTryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, skrócona wersja czatowa). Zachowaj strukturę raportu i ton eksperta premium.",
-
+        content: `${systemPrompt}
+Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, skrócona wersja czatowa). Zachowaj strukturę raportu i ton eksperta premium.`,
       },
       ...(history || []),
       { role: "user", content: message },
@@ -172,7 +142,7 @@ app.post("/api/send-report", async (req, res) => {
     const month = now.toLocaleString("pl-PL", { month: "long" });
     const year = now.getFullYear();
     const quarter = Math.ceil((now.getMonth() + 1) / 3);
-    const currentQuarter = `Q${quarter} ${year}`;;
+    const currentQuarter = `Q${quarter} ${year}`;
 
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
@@ -293,6 +263,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
-
-
-
