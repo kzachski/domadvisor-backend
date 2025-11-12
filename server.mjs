@@ -146,13 +146,15 @@ app.post("/api/send-report", async (req, res) => {
 
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
-    // 🧠 Generowanie pełnego raportu eksperckiego
+    // 🧠 Generowanie pełnego raportu eksperckiego z (systemPrompt)
     const messages = [
       {
         role: "system",
         content: `
-Jesteś zespołem ekspertów DomAdvisor (Jakub i Magdalena). 
-Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce, bazując na danych z NBP, Otodom Analytics, AMRON-SARFiN i GUS.
+Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium). 
+Uwzględnij zasady WALIDACJI DANYCH RYNKOWYCH i najnowsze dane (NBP, Otodom, AMRON-SARFiN). 
+Nie używaj danych sprzed 2025 roku.`,
+  },
 
 📅 AKTUALNOŚĆ DANYCH
 Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
@@ -263,3 +265,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
