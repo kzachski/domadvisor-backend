@@ -178,31 +178,31 @@ Zachowaj strukturę i ton eksperta.
 6️⃣ PLAN 30 / 60 / 90 DNI  
 7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
 
-🏗️ MODUŁ ARCHITEKTONICZNY I HOME-STAGING (dla sekcji 3):
+🏗️ MODUŁ LIFTINGU / ADAPTACJI (dla sekcji 3):
 Uwzględnij trzy warianty liftingu lub adaptacji mieszkania z realistycznymi kosztami (materiały + robocizna) 
-oraz typowym wzrostem wartości nieruchomości. Oceń, który wariant jest najbardziej racjonalny ekonomicznie 
-dla analizowanego lokalu i lokalizacji.
+oraz potencjalnym wpływem na wartość nieruchomości. 
+Zaznacz, że wzrost wartości nie jest gwarantowany — zależy od ceny zakupu, zakresu remontu i jakości wykonania.
 🔹 **Wariant A – Lifting lekki / odświeżenie**
-Zakres: malowanie, wymiana oświetlenia, drobne naprawy, stylizacja wnętrza (home staging).  
+Zakres: malowanie, wymiana oświetlenia, home staging, kosmetyka wnętrz.  
 Koszt: 300–800 zł/m².  
-Efekt: poprawa estetyki, szybsza sprzedaż, wzrost wartości o **+5–10%**.  
-Rekomendowany dla mieszkań w dobrym stanie, przygotowywanych do sprzedaży lub wynajmu.
+Efekt: poprawa wizerunku i szybsza sprzedaż, potencjalny wzrost wartości **+3–8 %**.  
+Rekomendowany dla mieszkań w dobrym stanie, gdy celem jest prezentacja lub wynajem.
 🔹 **Wariant B – Modernizacja funkcjonalna / adaptacja średnia**
-Zakres: modernizacja kuchni i łazienki, wymiana podłóg i drzwi, lifting układu (np. wydzielenie dodatkowego pokoju).  
+Zakres: modernizacja kuchni i łazienki, wymiana podłóg i drzwi, lifting układu (np. dodanie pokoju).  
 Koszt: 1000–2000 zł/m².  
-Efekt: wyraźna poprawa funkcjonalności i standardu, wzrost wartości o **+10–20%**.  
-Rekomendowany dla mieszkań z potencjałem inwestycyjnym i dobrej lokalizacji.
+Efekt: poprawa funkcjonalności, zwiększenie popytu, potencjalny wzrost wartości **+8–15 %**.  
+Jeśli mieszkanie kupiono po cenie rynkowej, realny zysk wynosi raczej **5–10 %**. Wyciągnij dane z punktu 2: Analizy Finansowej by ocenić czy mieszkanie jest w cenie czy poniżej ceny rynkowej. 
+Rekomendowany wariant o najlepszym stosunku koszt–efekt.
 🔹 **Wariant C – Kompleksowa adaptacja / standard premium**
-Zakres: generalny remont, przebudowa układu, meble na wymiar, wykończenie w wysokim standardzie.  
+Zakres: generalny remont, przebudowa układu, wykończenie w wysokim standardzie.  
 Koszt: 2000–4000 zł/m².  
-Efekt: wejście w segment „gotowe do zamieszkania” lub premium, wzrost wartości o **+15–28%**.  
-Rekomendowany dla inwestorów lub nabywców celujących w wyższy standard rynkowy.
-
-W raporcie podaj dla danej nieruchomości:
-- który wariant jest optymalny, 
-- szacowany koszt całkowity (na podstawie metrażu),
-- oraz spodziewany procentowy wzrost wartości lub ROI.
-
+Efekt: pełna transformacja mieszkania, potencjalny wzrost wartości **+15–30 %**, 
+ale **tylko jeśli nieruchomość została kupiona poniżej ceny rynkowej** lub wymagała kapitalnego remontu. Wyciągnij dane z punktu 2: Analizy Finansowej by ocenić czy mieszkanie jest w cenie czy poniżej ceny rynkowej.   
+W innych przypadkach celem jest utrzymanie wartości i wejście w wyższy segment rynkowy.
+W raporcie podaj:
+- który wariant jest najbardziej opłacalny w kontekście lokalizacji i stanu mieszkania,
+- szacowany koszt całkowity remontu,
+- oraz realistyczny (a nie maksymalny) potencjał wzrostu wartości lub ROI.
 
 STYL
 Ton ekspercki, rzeczowy, bez ozdobników.
@@ -297,6 +297,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
