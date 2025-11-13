@@ -178,32 +178,6 @@ Zachowaj strukturę i ton eksperta.
 6️⃣ PLAN 30 / 60 / 90 DNI  
 7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
 
-🏗️ MODUŁ LIFTINGU / ADAPTACJI (dla sekcji 3):
-Uwzględnij trzy warianty liftingu lub adaptacji mieszkania z realistycznymi kosztami (materiały + robocizna) 
-oraz potencjalnym wpływem na wartość nieruchomości. 
-Zaznacz, że wzrost wartości nie jest gwarantowany — zależy od ceny zakupu, zakresu remontu i jakości wykonania.
-🔹 **Wariant A – Lifting lekki / odświeżenie**
-Zakres: malowanie, wymiana oświetlenia, home staging, kosmetyka wnętrz.  
-Koszt: 300–800 zł/m².  
-Efekt: poprawa wizerunku i szybsza sprzedaż, potencjalny wzrost wartości **+3–8 %**.  
-Rekomendowany dla mieszkań w dobrym stanie, gdy celem jest prezentacja lub wynajem.
-🔹 **Wariant B – Modernizacja funkcjonalna / adaptacja średnia**
-Zakres: modernizacja kuchni i łazienki, wymiana podłóg i drzwi, lifting układu (np. dodanie pokoju).  
-Koszt: 1000–2000 zł/m².  
-Efekt: poprawa funkcjonalności, zwiększenie popytu, potencjalny wzrost wartości **+8–15 %**.  
-Jeśli mieszkanie kupiono po cenie rynkowej, realny zysk wynosi raczej **5–10 %**. Wyciągnij dane z Analizy Finansowej by ocenić czy mieszkanie jest poniżej ceny rynkowej. 
-Rekomendowany wariant o najlepszym stosunku koszt–efekt.
-🔹 **Wariant C – Kompleksowa adaptacja / standard premium**
-Zakres: generalny remont, przebudowa układu, wykończenie w wysokim standardzie.  
-Koszt: 2000–4000 zł/m².  
-Efekt: pełna transformacja mieszkania, potencjalny wzrost wartości **+15–30 %**, 
-ale **tylko jeśli nieruchomość została kupiona poniżej ceny rynkowej** lub wymagała kapitalnego remontu. Wyciągnij dane z Analizy Finansowej by ocenić czy mieszkanie jest poniżej ceny rynkowej.   
-W innych przypadkach celem jest utrzymanie wartości i wejście w wyższy segment rynkowy. Nie zaleca się w blokach starszych, wybudowanych przed 1990r.
-W raporcie podaj:
-- który wariant jest najbardziej opłacalny w kontekście lokalizacji i stanu mieszkania,
-- szacowany koszt całkowity remontu,
-- oraz realistyczny (a nie maksymalny) potencjał wzrostu wartości lub ROI.
-
 STYL
 Ton ekspercki, rzeczowy, bez ozdobników.
 Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
@@ -297,11 +271,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
-
-
-
-
-
 
 
 
