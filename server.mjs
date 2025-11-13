@@ -191,14 +191,14 @@ Rekomendowany dla mieszkań w dobrym stanie, gdy celem jest prezentacja lub wyna
 Zakres: modernizacja kuchni i łazienki, wymiana podłóg i drzwi, lifting układu (np. dodanie pokoju).  
 Koszt: 1000–2000 zł/m².  
 Efekt: poprawa funkcjonalności, zwiększenie popytu, potencjalny wzrost wartości **+8–15 %**.  
-Jeśli mieszkanie kupiono po cenie rynkowej, realny zysk wynosi raczej **5–10 %**. Wyciągnij dane z punktu 2: Analizy Finansowej by ocenić czy mieszkanie jest w cenie czy poniżej ceny rynkowej. 
+Jeśli mieszkanie kupiono po cenie rynkowej, realny zysk wynosi raczej **5–10 %**. Wyciągnij dane z Analizy Finansowej by ocenić czy mieszkanie jest poniżej ceny rynkowej. 
 Rekomendowany wariant o najlepszym stosunku koszt–efekt.
 🔹 **Wariant C – Kompleksowa adaptacja / standard premium**
 Zakres: generalny remont, przebudowa układu, wykończenie w wysokim standardzie.  
 Koszt: 2000–4000 zł/m².  
 Efekt: pełna transformacja mieszkania, potencjalny wzrost wartości **+15–30 %**, 
-ale **tylko jeśli nieruchomość została kupiona poniżej ceny rynkowej** lub wymagała kapitalnego remontu. Wyciągnij dane z punktu 2: Analizy Finansowej by ocenić czy mieszkanie jest w cenie czy poniżej ceny rynkowej.   
-W innych przypadkach celem jest utrzymanie wartości i wejście w wyższy segment rynkowy.
+ale **tylko jeśli nieruchomość została kupiona poniżej ceny rynkowej** lub wymagała kapitalnego remontu. Wyciągnij dane z Analizy Finansowej by ocenić czy mieszkanie jest poniżej ceny rynkowej.   
+W innych przypadkach celem jest utrzymanie wartości i wejście w wyższy segment rynkowy. Nie zaleca się w blokach starszych, wybudowanych przed 1990r.
 W raporcie podaj:
 - który wariant jest najbardziej opłacalny w kontekście lokalizacji i stanu mieszkania,
 - szacowany koszt całkowity remontu,
@@ -297,6 +297,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
