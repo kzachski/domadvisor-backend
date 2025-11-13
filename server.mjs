@@ -179,20 +179,30 @@ Zachowaj strukturę i ton eksperta.
 7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
 
 🏗️ MODUŁ ARCHITEKTONICZNY I HOME-STAGING (dla sekcji 3):
-Uwzględnij trzy realne warianty liftingu mieszkania — prezentuj je z szacowanymi kosztami oraz potencjałem wzrostu wartości nieruchomości.
-• **Wariant A – Odświeżenie lekkie**  
-Zakres: malowanie, wymiana oświetlenia, drobne poprawki, elementy dekoracyjne.  
-Szacowany koszt: 300–800 zł/m² (robocizna + materiały).  
-Potencjalny wzrost wartości nieruchomości: +1–3%.
-• **Wariant B – Modernizacja średnia**  
-Zakres: odświeżenie łazienki, wymiana podłóg i drzwi, nowa zabudowa kuchni, zmiana układu mebli.  
-Szacowany koszt: 1000–2000 zł/m² (robocizna + materiały średniej klasy).  
-Potencjalny wzrost wartości: +3–6%.
-• **Wariant C – Lifting kompleksowy / premium**  
-Zakres: pełny remont, zmiana układu funkcjonalnego (np. 2→3 pokoje), materiały wysokiej klasy, meble na wymiar.  
-Szacowany koszt: 2000–4000 zł/m² (robocizna + materiały premium).  
-Potencjalny wzrost wartości: +6–12%.
-Podaj, który wariant byłby optymalny dla danej nieruchomości, uzasadnij wybór i wskaż szacowany koszt całkowity na podstawie metrażu lokalu.
+Uwzględnij trzy warianty liftingu lub adaptacji mieszkania z realistycznymi kosztami (materiały + robocizna) 
+oraz typowym wzrostem wartości nieruchomości. Oceń, który wariant jest najbardziej racjonalny ekonomicznie 
+dla analizowanego lokalu i lokalizacji.
+🔹 **Wariant A – Lifting lekki / odświeżenie**
+Zakres: malowanie, wymiana oświetlenia, drobne naprawy, stylizacja wnętrza (home staging).  
+Koszt: 300–800 zł/m².  
+Efekt: poprawa estetyki, szybsza sprzedaż, wzrost wartości o **+5–10%**.  
+Rekomendowany dla mieszkań w dobrym stanie, przygotowywanych do sprzedaży lub wynajmu.
+🔹 **Wariant B – Modernizacja funkcjonalna / adaptacja średnia**
+Zakres: modernizacja kuchni i łazienki, wymiana podłóg i drzwi, lifting układu (np. wydzielenie dodatkowego pokoju).  
+Koszt: 1000–2000 zł/m².  
+Efekt: wyraźna poprawa funkcjonalności i standardu, wzrost wartości o **+10–20%**.  
+Rekomendowany dla mieszkań z potencjałem inwestycyjnym i dobrej lokalizacji.
+🔹 **Wariant C – Kompleksowa adaptacja / standard premium**
+Zakres: generalny remont, przebudowa układu, meble na wymiar, wykończenie w wysokim standardzie.  
+Koszt: 2000–4000 zł/m².  
+Efekt: wejście w segment „gotowe do zamieszkania” lub premium, wzrost wartości o **+15–28%**.  
+Rekomendowany dla inwestorów lub nabywców celujących w wyższy standard rynkowy.
+
+W raporcie podaj dla danej nieruchomości:
+- który wariant jest optymalny, 
+- szacowany koszt całkowity (na podstawie metrażu),
+- oraz spodziewany procentowy wzrost wartości lub ROI.
+
 
 STYL
 Ton ekspercki, rzeczowy, bez ozdobników.
@@ -287,6 +297,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
