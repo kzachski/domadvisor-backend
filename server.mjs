@@ -178,6 +178,14 @@ Zachowaj strukturę i ton eksperta.
 6️⃣ PLAN 30 / 60 / 90 DNI  
 7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
 
+W każdej sekcji raportu należy:
+rozwijać wątki rynkowe i kontekst lokalny (dynamika cen, popytu, typ zabudowy, trendy estetyczne),
+dodawać komentarze eksperckie i obserwacje branżowe („W trendach rynkowych obserwuje się…”, „Z analizy danych NBP wynika…”),
+interpretować liczby i relacje, tłumacząc ich znaczenie dla decyzji o charakterze edukacyjnym,
+rozbudowywać liftingi A/B/C o materiały, standard wykończenia i wpływ estetyki na wartość,
+omawiać ryzyka (techniczne, prawne, rynkowe) w sposób neutralny i rzeczowy,
+w rekomendacji końcowej przedstawiać rozbudowaną analizę wariantów, a nie pojedynczą poradę.
+
 STYL
 Ton ekspercki, rzeczowy, bez ozdobników.
 Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
@@ -271,6 +279,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
