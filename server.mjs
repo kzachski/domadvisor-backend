@@ -150,12 +150,38 @@ Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce
 oparty o dane ofertowe i transakcyjne, z zachowaniem priorytetów i aktualności rynkowej.
 
 📊 ZASADY ANALIZY DANYCH:
-- **Nie łącz ani nie uśredniaj źródeł danych.**
-- **Dane ofertowe (Otodom Analytics, SonarHome)** traktuj jako nadrzędne i bieżące źródło odniesienia — zawsze odnoszą się do ostatniego miesiąca (np. listopad 2025).
-- **Dane transakcyjne (NBP, AMRON-SARFiN)** wykorzystuj wyłącznie w tle — jako kontekst historyczny i potwierdzenie trendu, nie jako główną wycenę.
-- Jeśli dane transakcyjne są istotnie niższe niż ofertowe — wyjaśnij to w treści raportu (np. "dane transakcyjne z Q3 2025 pokazują niższe poziomy, ale obecne oferty wzrosły o X% względem poprzedniego kwartału").
-- Preferuj wnioskowanie i widełki oparte na danych ofertowych — są nadrzędne i bieżące.
-- Nigdy nie używaj danych sprzed 2025 roku ani nie interpoluj z błędnych wartości archiwalnych.
+📈 ALGORYTM ESTYMACJI CEN (DomAdvisor Hybrid)
+Przy analizie cen ofertowych stosuj poniższy algorytm estymacji:
+
+1️⃣ **Źródła i wagi zaufania**
+- Otodom / Morizon – dane ofertowe, aktualne: **waga 0.45**
+- SonarHome – dane modelowe, uśrednione: **waga 0.35**
+- Adresowo / portale lokalne – dane uzupełniające: **waga 0.15**
+- NBP / AMRON-SARFiN – dane transakcyjne (tło): **waga 0.05**
+
+2️⃣ **Wzór bazowy**
+Średnia cena ofertowa (C_ofertowa) =  
+(C_otodom × 0.45) + (C_sonar × 0.35) + (C_adresowo × 0.15) + (C_nbp × 0.05)
+
+3️⃣ **Korekty kontekstowe**
+Po obliczeniu średniej wprowadź korekty:
+- Trend miesięczny (Q4 2025): **+0.8–1.2% / miesiąc**
+- Standard mieszkania (stan, piętro, widok): **±3–10%**
+
+4️⃣ **Wynik końcowy**
+Cena_realna = C_ofertowa × (1 + trend + standard)
+
+5️⃣ **Zakres referencyjny (listopad ${year})**
+- Gdańsk–Żabianka: 14 000–16 000 zł/m²  
+- Oliwa: 14 500–16 500 zł/m²  
+- Przymorze: 12 800–14 300 zł/m²  
+- Wrzeszcz: 14 000–16 800 zł/m²  
+Nie podawaj wartości niższych niż dolna granica ofertowa dla danej lokalizacji.
+
+6️⃣ **Zasady interpretacji**
+- Jeśli dane transakcyjne (NBP, AMRON) są niższe – wyjaśnij różnicę w treści raportu (np. „transakcje Q3 2025 pozostają o 6–9% niższe od cen ofertowych z Q4 2025”).  
+- Dla mieszkań kupionych poniżej wartości rynkowej, dopuszczalne jest użycie przedziału –10% do +25% dla analizy inwestycyjnej.
+
 
 📅 AKTUALNOŚĆ DANYCH:
 Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
@@ -269,6 +295,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
