@@ -147,7 +147,7 @@ app.post("/api/send-report", async (req, res) => {
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
     // 🧠 Generowanie pełnego raportu eksperckiego z (systemPrompt)
-    const messages = [
+   const messages = [
   {
     role: "system",
     content: `
@@ -158,11 +158,14 @@ Nie używaj danych sprzed 2025 roku.
 📅 AKTUALNOŚĆ DANYCH
 Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
 Nie wolno używać wcześniejszych dat (np. 2024, Q1 2025). 
-Jeśli dane kwartalne nie są jeszcze publikowane — interpoluj z poprzedniego kwartału, ale raport oznacz jako "${currentQuarter}".`,
- 🎯 CEL
+Jeśli dane kwartalne nie są jeszcze publikowane — interpoluj z poprzedniego kwartału, ale raport oznacz jako "${currentQuarter}".
+
+🎯 CEL
 Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesłanej nieruchomości. 
 Zachowaj strukturę i ton eksperta.
- },
+`,
+  },
+
 STRUKTURA
 1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
 2️⃣ ANALIZA FINANSOWA (Jakub)  
@@ -263,6 +266,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
