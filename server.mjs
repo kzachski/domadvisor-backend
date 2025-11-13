@@ -163,10 +163,8 @@ Jeśli dane kwartalne nie są jeszcze publikowane — interpoluj z poprzedniego 
 🎯 CEL
 Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesłanej nieruchomości. 
 Zachowaj strukturę i ton eksperta.
-`,
-  },
 
-STRUKTURA
+📊 STRUKTURA
 1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
 2️⃣ ANALIZA FINANSOWA (Jakub)  
 3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
@@ -176,9 +174,11 @@ STRUKTURA
 7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
 
 STYL
-Ton ekspercki, rzeczowy, bez ozdobników. 
-Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".`,
-      },
+Ton ekspercki, rzeczowy, bez ozdobników.
+Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
+`,
+  },
+
       {
         role: "user",
         content: `${propertyData}
@@ -266,6 +266,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
