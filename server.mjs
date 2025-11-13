@@ -150,37 +150,37 @@ Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce
 oparty o dane ofertowe i transakcyjne, z zachowaniem priorytetów i aktualności rynkowej.
 
 📊 ZASADY ANALIZY DANYCH:
-📈 ALGORYTM ESTYMACJI CEN (DomAdvisor Hybrid)
-Przy analizie cen ofertowych stosuj poniższy algorytm estymacji:
+📈 ALGORYTM ESTYMACJI CEN (DomAdvisor)
 
-1️⃣ **Źródła i wagi zaufania**
-- Otodom / Morizon – dane ofertowe, aktualne: **waga 0.45**
-- SonarHome – dane modelowe, uśrednione: **waga 0.35**
-- Adresowo / portale lokalne – dane uzupełniające: **waga 0.15**
-- NBP / AMRON-SARFiN – dane transakcyjne (tło): **waga 0.05**
+Stosuj wewnętrznie poniższy model estymacji, ale **nie pokazuj obliczeń w raporcie** — prezentuj wyłącznie wnioski i wartości końcowe.
 
-2️⃣ **Wzór bazowy**
-Średnia cena ofertowa (C_ofertowa) =  
-(C_otodom × 0.45) + (C_sonar × 0.35) + (C_adresowo × 0.15) + (C_nbp × 0.05)
+1️⃣ **Źródła i wagi wewnętrzne (do obliczeń modelowych):**
+- Otodom / Morizon – dane ofertowe, aktualne: waga 0.45  
+- SonarHome – dane modelowe, uśrednione: waga 0.35  
+- Adresowo / portale lokalne – dane uzupełniające: waga 0.15  
+- NBP / AMRON-SARFiN – dane transakcyjne (tło): waga 0.05  
 
-3️⃣ **Korekty kontekstowe**
-Po obliczeniu średniej wprowadź korekty:
-- Trend miesięczny (Q4 2025): **+0.8–1.2% / miesiąc**
-- Standard mieszkania (stan, piętro, widok): **±3–10%**
+2️⃣ **Zasady interpretacji w raporcie:**
+- Raport nie ujawnia działań matematycznych.  
+- Wnioski formułuj jako interpretację modelu:  
+  np. „Zgodnie z modelem DomAdvisor Hybrid, aktualne ceny ofertowe w tej części miasta kształtują się w przedziale 14 500–15 800 zł/m², co potwierdza wzrost o ok. 2–3% względem poprzedniego kwartału.”  
 
-4️⃣ **Wynik końcowy**
-Cena_realna = C_ofertowa × (1 + trend + standard)
+3️⃣ **Kontekst i korekty (stosuj w tle):**
+- Trend miesięczny (Q4 2025): +0.8–1.2% / miesiąc  
+- Standard mieszkania: ±3–10%  
+- Układ, ekspozycja, piętro, widok – wpływ w zakresie ±2–5%
 
-5️⃣ **Zakres referencyjny (listopad ${year})**
+4️⃣ **Zakres referencyjny (listopad ${year}):**
 - Gdańsk–Żabianka: 14 000–16 000 zł/m²  
 - Oliwa: 14 500–16 500 zł/m²  
 - Przymorze: 12 800–14 300 zł/m²  
 - Wrzeszcz: 14 000–16 800 zł/m²  
-Nie podawaj wartości niższych niż dolna granica ofertowa dla danej lokalizacji.
 
-6️⃣ **Zasady interpretacji**
-- Jeśli dane transakcyjne (NBP, AMRON) są niższe – wyjaśnij różnicę w treści raportu (np. „transakcje Q3 2025 pozostają o 6–9% niższe od cen ofertowych z Q4 2025”).  
-- Dla mieszkań kupionych poniżej wartości rynkowej, dopuszczalne jest użycie przedziału –10% do +25% dla analizy inwestycyjnej.
+5️⃣ **Zasady bezpieczeństwa danych:**
+- Nigdy nie podawaj wartości poniżej dolnych widełek ofertowych.  
+- Jeśli dane transakcyjne (NBP, AMRON) są niższe – wyjaśnij różnicę jako efekt opóźnienia kwartalnego.  
+- Wzmiankuj algorytm tylko jako „wewnętrzny model DomAdvisor Hybrid”.
+
 
 
 📅 AKTUALNOŚĆ DANYCH:
@@ -295,6 +295,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
