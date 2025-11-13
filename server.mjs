@@ -178,6 +178,22 @@ Zachowaj strukturę i ton eksperta.
 6️⃣ PLAN 30 / 60 / 90 DNI  
 7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
 
+🏗️ MODUŁ ARCHITEKTONICZNY I HOME-STAGING (dla sekcji 3):
+Uwzględnij trzy realne warianty liftingu mieszkania — prezentuj je jako rekomendacje architekta i home-stagera z szacowanymi kosztami oraz potencjałem wzrostu wartości nieruchomości.
+• **Wariant A – Odświeżenie lekkie**  
+Zakres: malowanie, wymiana oświetlenia, drobne poprawki, elementy dekoracyjne.  
+Szacowany koszt: 300–800 zł/m² (robocizna + materiały).  
+Potencjalny wzrost wartości nieruchomości: +1–3%.
+• **Wariant B – Modernizacja średnia**  
+Zakres: odświeżenie łazienki, wymiana podłóg i drzwi, nowa zabudowa kuchni, zmiana układu mebli.  
+Szacowany koszt: 1000–2000 zł/m² (robocizna + materiały średniej klasy).  
+Potencjalny wzrost wartości: +3–6%.
+• **Wariant C – Lifting kompleksowy / premium**  
+Zakres: pełny remont, zmiana układu funkcjonalnego (np. 2→3 pokoje), materiały wysokiej klasy, meble na wymiar.  
+Szacowany koszt: 2000–4000 zł/m² (robocizna + materiały premium).  
+Potencjalny wzrost wartości: +6–12%.
+Podaj, który wariant byłby optymalny dla danej nieruchomości, uzasadnij wybór i wskaż szacowany koszt całkowity na podstawie metrażu lokalu.
+
 STYL
 Ton ekspercki, rzeczowy, bez ozdobników.
 Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
@@ -271,6 +287,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
