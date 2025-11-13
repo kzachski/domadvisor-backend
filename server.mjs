@@ -84,14 +84,8 @@ nazwisko → tylko inicjał.
 
 ŹRÓDŁA I OKRES ANALIZY
 Zawsze korzystaj z najnowszych dostępnych danych:
-
-- NBP – Biuletyny cen transakcyjnych (ostatni pełny kwartał)  
-- Otodom Analytics – dane ofertowe i transakcyjne (ostatni miesiąc lub kwartał)  
-- AMRON-SARFiN – raporty kwartalne  
-- Dane lokalne – Poznań, Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Szczecin  
-
-Jeśli dane nie są dostępne — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
-W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowszy dostępny).
+- **Dane ofertowe (Otodom Analytics, SonarHome)** traktuj jako nadrzędne i bieżące źródło odniesienia — zawsze odnoszą się do ostatniego miesiąca (np. listopad 2025).
+- **Dane transakcyjne (NBP, AMRON-SARFiN)** wykorzystuj pomocniczo — jako tło historyczne i punkt odniesienia dla oceny trendu
 
 ---`;
 
@@ -271,6 +265,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
