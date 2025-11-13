@@ -179,7 +179,7 @@ Zachowaj strukturę i ton eksperta.
 7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
 
 🏗️ MODUŁ ARCHITEKTONICZNY I HOME-STAGING (dla sekcji 3):
-Uwzględnij trzy realne warianty liftingu mieszkania — prezentuj je jako rekomendacje architekta i home-stagera z szacowanymi kosztami oraz potencjałem wzrostu wartości nieruchomości.
+Uwzględnij trzy realne warianty liftingu mieszkania — prezentuj je z szacowanymi kosztami oraz potencjałem wzrostu wartości nieruchomości.
 • **Wariant A – Odświeżenie lekkie**  
 Zakres: malowanie, wymiana oświetlenia, drobne poprawki, elementy dekoracyjne.  
 Szacowany koszt: 300–800 zł/m² (robocizna + materiały).  
@@ -287,6 +287,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
