@@ -1,6 +1,6 @@
 // =========================================================
-// 🏠 DOMADVISOR PREMIUM BACKEND (v3.4 Hybrid Stable)
-// GPT-4.1 + SMTP (home.pl) + PDF + API Chat + Safe Dates
+// 🏠 DOMADVISOR PREMIUM BACKEND (Render Ready)
+// GPT-4o + SMTP (home.pl) + PDF + API Chat + Safe Dates
 // =========================================================
 
 import express from "express";
@@ -25,9 +25,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// 🧠 SYSTEM PROMPT – zachowanie DomAdvisor v3.4
+// 🧠 SYSTEM PROMPT – zachowanie DomAdvisor
 const systemPrompt = String.raw`
-DOMADVISOR – SYSTEM PROMPT (v3.4 / 2025–2026 Hybrid Stable)
+DOMADVISOR – SYSTEM PROMPT (v3.3 / 2025–2026 Ready)
 
 ZACHOWANIE STARTOWE
 Komunikat "Witaj w DomAdvisor…" traktuj jako systemowy.
@@ -48,6 +48,13 @@ Możemy przygotować dla Ciebie jedną z poniższych analiz:
 8. Optymalizacja najmu – trzy warianty liftingów A/B/C z kosztami i wpływem na przychód.
 
 Aby wrócić do menu głównego, wpisz: 0.
+
+---
+
+LOGIKA NAWIGACJI
+Wejście 1–8 → przejście do wybranego modułu.
+Komendy "0", "menu", "powrot", "zmientemat", "wrocdopoczatku", "p" → natychmiast pokazują blok MENU_START (bez komentarzy).
+Komenda powrotu działa zawsze.
 
 ---
 
@@ -75,37 +82,17 @@ nazwisko → tylko inicjał.
 
 ---
 
-📈 ŹRÓDŁA I OKRES ANALIZY
-Zawsze korzystaj z najnowszych danych:
+ŹRÓDŁA I OKRES ANALIZY
+Zawsze korzystaj z najnowszych dostępnych danych:
 
-- Otodom Analytics i SonarHome – dane ofertowe (ostatni miesiąc, nadrzędne)  
-- NBP i AMRON-SARFiN – dane transakcyjne (ostatni pełny kwartał, tło)  
-- Dane lokalne – Warszawa, Kraków, Wrocław, Poznań, Trójmiasto, Łódź, Katowice, Szczecin  
+- NBP – Biuletyny cen transakcyjnych (ostatni pełny kwartał)  
+- Otodom Analytics – dane ofertowe i transakcyjne (ostatni miesiąc lub kwartał)  
+- AMRON-SARFiN – raporty kwartalne  
+- Dane lokalne – Poznań, Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Szczecin  
 
-Jeśli dane nie są dostępne — interpoluj z rynków sąsiednich.  
-W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowsze dostępne).
+Jeśli dane nie są dostępne — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
+W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowszy dostępny).
 
----
-
-🏗️ MODUŁ LIFTINGU / ADAPTACJI
-Uwzględnij trzy warianty modernizacji:
-
-A – Lifting lekki / odświeżenie  
-• Koszt: 300–800 zł/m²  
-• Zakres: malowanie, oświetlenie, home staging  
-• Efekt: poprawa wizerunku, wzrost wartości **+3–8%**
-
-B – Modernizacja funkcjonalna  
-• Koszt: 1000–2000 zł/m²  
-• Zakres: kuchnia, łazienka, podłogi, drzwi  
-• Efekt: wzrost wartości **+8–15%**, realnie **+5–10%** jeśli mieszkanie kupiono po cenie rynkowej
-
-C – Kompleksowa adaptacja / premium  
-• Koszt: 2000–4000 zł/m²  
-• Zakres: remont generalny, przebudowa, wykończenie w wysokim standardzie  
-• Efekt: wzrost wartości **+15–30%**, tylko jeśli mieszkanie kupiono poniżej ceny rynkowej
-
-Nie gwarantuj wzrostu wartości – zależy od zakupu i jakości wykonania.
 ---`;
 
 // =========================================================
@@ -128,7 +115,7 @@ Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, s
     const completion = await openai.chat.completions.create({
       model: "gpt-4.1",
       messages,
-      max_tokens: 8000,
+      max_tokens: 13000,
       temperature: 0.6,
     });
 
@@ -159,21 +146,51 @@ app.post("/api/send-report", async (req, res) => {
 
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
-    const messages = [
-      {
-        role: "system",
-        content: `
-${systemPrompt}
-Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium).
-Raport musi zawierać wszystkie sekcje (1–7) i uwzględniać najnowsze dane rynkowe (${currentQuarter}).
+    // 🧠 Generowanie pełnego raportu eksperckiego z (systemPrompt)
+   const messages = [
+  {
+    role: "system",
+    content: `
+Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium). 
+Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce, 
+łącząc dane ofertowe (Otodom, SonarHome) oraz dane transakcyjne (NBP, AMRON-SARFiN).
+
+📊 ZASADY ANALIZY DANYCH:
+- **Dane ofertowe (Otodom Analytics, SonarHome)** traktuj jako nadrzędne i bieżące źródło odniesienia — zawsze odnoszą się do ostatniego miesiąca (np. listopad 2025).
+- **Dane transakcyjne (NBP, AMRON-SARFiN)** wykorzystuj pomocniczo — jako tło historyczne i punkt odniesienia dla oceny trendu.
+- Jeśli dane transakcyjne są istotnie niższe niż ofertowe — wyjaśnij to w treści raportu (np. "dane transakcyjne z Q3 2025 pokazują jeszcze niższe poziomy, jednak obecne oferty rynkowe wzrosły o X%").
+- Nigdy nie używaj danych sprzed 2025 roku ani nie interpoluj z błędnych wartości archiwalnych.
+📅 AKTUALNOŚĆ DANYCH
+Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
+Nie wolno używać wcześniejszych dat (np. 2024, Q1 2025). 
+Jeśli dane kwartalne nie są jeszcze publikowane — interpoluj z poprzedniego kwartału, ale raport oznacz jako "${currentQuarter}".
+
+🎯 CEL
+Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesłanej nieruchomości. 
+Zachowaj strukturę i ton eksperta.
+
+📊 STRUKTURA
+1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️⃣ ANALIZA FINANSOWA (Jakub)  
+3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
+4️⃣ RYZYKA  
+5️⃣ REKOMENDACJA KOŃCOWA  
+6️⃣ PLAN 30 / 60 / 90 DNI  
+7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
+
+STYL
+Ton ekspercki, rzeczowy, bez ozdobników.
+Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
 `,
-      },
+  },
+
       {
         role: "user",
         content: `${propertyData}
 
-Każda sekcja ma być kompletna i spójna, w stylu eksperckim.
-Jeśli model skraca tekst — kontynuuj generację aż do pełnego zakończenia.`,
+Upewnij się, że raport DomAdvisor zawiera wszystkie powyższe sekcje w pełnym rozwinięciu.
+Każda sekcja musi być kompletna, szczegółowa i rozbudowana – minimum kilka akapitów.
+Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
       },
     ];
 
@@ -247,10 +264,15 @@ Jeśli model skraca tekst — kontynuuj generację aż do pełnego zakończenia.
 // 🚀 START SERWERA
 // ============================================================
 app.get("/", (req, res) => {
-  res.send("✅ DomAdvisor backend działa poprawnie. Użyj POST /api/send-report lub /api/chat");
+  res.send("✅ DomAdvisor backend działa poprawnie. Użyj POST /api/send-report");
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
+
+
+
+
