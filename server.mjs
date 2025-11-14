@@ -154,29 +154,23 @@ oparty o dane ofertowe i transakcyjne, z zachowaniem priorytetów i aktualności
 
 Stosuj wewnętrznie poniższy model estymacji, ale **nie pokazuj obliczeń w raporcie** — prezentuj wyłącznie wnioski i wartości końcowe.
 
-1️⃣ **Źródła i wagi wewnętrzne (do obliczeń modelowych):**
+ 1️ **Źródła i wagi wewnętrzne (do obliczeń modelowych):**
 - Otodom / Morizon – dane ofertowe, aktualne: waga 0.45  
 - SonarHome – dane modelowe, uśrednione: waga 0.35  
 - Adresowo / portale lokalne – dane uzupełniające: waga 0.15  
 - NBP / AMRON-SARFiN – dane transakcyjne (tło): waga 0.05  
 
-2️⃣ **Zasady interpretacji w raporcie:**
+ 2️ **Zasady interpretacji w raporcie:**
 - Raport nie ujawnia działań matematycznych.  
 - Wnioski formułuj jako interpretację modelu:  
   np. „Zgodnie z modelem DomAdvisor Hybrid, aktualne ceny ofertowe w tej części miasta kształtują się w przedziale 14 500–15 800 zł/m², co potwierdza wzrost o ok. 2–3% względem poprzedniego kwartału.”  
 
-3️⃣ **Kontekst i korekty (stosuj w tle):**
+ 3️ **Kontekst i korekty (stosuj w tle):**
 - Trend miesięczny (Q4 2025): +0.8–1.2% / miesiąc  
 - Standard mieszkania: ±3–10%  
 - Układ, ekspozycja, piętro, widok – wpływ w zakresie ±2–5%
 
-4️⃣ **Zakres referencyjny (listopad ${year}):**
-- Gdańsk–Żabianka: 14 000–16 000 zł/m²  
-- Oliwa: 14 500–16 500 zł/m²  
-- Przymorze: 12 800–14 300 zł/m²  
-- Wrzeszcz: 14 000–16 800 zł/m²  
-
-5️⃣ **Zasady bezpieczeństwa danych:**
+ 4 **Zasady bezpieczeństwa danych:**
 - Nigdy nie podawaj wartości poniżej dolnych widełek ofertowych.  
 - Jeśli dane transakcyjne (NBP, AMRON) są niższe – wyjaśnij różnicę jako efekt opóźnienia kwartalnego.  
 - Wzmiankuj algorytm tylko jako „wewnętrzny model DomAdvisor Hybrid”.
@@ -193,14 +187,15 @@ Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesł
 Zachowaj strukturę, ton i narrację eksperta DomAdvisor.
 
 📊 STRUKTURA:
-1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
-2️⃣ ANALIZA FINANSOWA (Jakub)  
-3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
-4️⃣ RYZYKA  
-5️⃣ REKOMENDACJA KOŃCOWA  
-6️⃣ PLAN 30 / 60 / 90 DNI  
-7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
-6️⃣ PLAN 30 / 60 / 90 DNI  
+1️. STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️. ANALIZA FINANSOWA (Jakub)  
+3️. ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
+4️. RYZYKA  
+5️. REKOMENDACJA KOŃCOWA  
+6️. PLAN 30 / 60 / 90 DNI  
+7️. ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
+
+6. PLAN 30 / 60 / 90 DNI  
 Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)  
 
 Plan 30 / 60 / 90 dni generowany jest automatycznie w sekcji „Rekomendacja końcowa”,  
@@ -241,25 +236,43 @@ Uwzględnij trzy warianty liftingu lub adaptacji mieszkania z realistycznymi kos
 Nie pokazuj wyliczeń kosztów jednostkowych — prezentuj tylko przedziały i interpretację efektu ekonomicznego. 
 Uwzględnij, że wzrost wartości nie jest gwarantowany i zależy od ceny zakupu, lokalizacji oraz jakości wykonania.
 
-🔹 **Wariant A – Lifting lekki / odświeżenie**  
-Zakres: malowanie, wymiana oświetlenia, elementy dekoracyjne, home staging, kosmetyka wnętrz.  
-Koszt: **300–800 zł/m² (materiały + robocizna)**.  
-Efekt: poprawa wizerunku i szybsza sprzedaż lub wynajem, potencjalny wzrost wartości **+3–8%**.  
-Rekomendowany dla mieszkań w dobrym stanie technicznym lub inwestycji „na wynajem”.
+// 🧱 SEKCJA: LIFTINGI A/B/C – MODEL DOMADVISOR (v2.0)
+📐 LIFTINGI I MODERNIZACJE (A/B/C)
 
-🔹 **Wariant B – Modernizacja funkcjonalna / adaptacja średnia**  
-Zakres: modernizacja kuchni i łazienki, wymiana podłóg i drzwi, lifting układu (np. wydzielenie dodatkowego pokoju), montaż AGD.  
-Koszt: **1000–2000 zł/m² (materiały + robocizna)**.  
-Efekt: wyraźna poprawa funkcjonalności i estetyki, potencjalny wzrost wartości **+8–15%**.  
-Jeśli mieszkanie zostało kupione poniżej wartości rynkowej — możliwy realny zysk netto w przedziale **10–20%**.  
-Wariant o najlepszym stosunku koszt–efekt dla większości inwestycji mieszkaniowych.
+DomAdvisor generuje trzy warianty liftingów wykończeniowych w zależności od celu (flip, najem, zamieszkanie).  
+Warianty obliczane są w tle na podstawie średnich kosztów rynkowych w Polsce (Q4 ${year}) z uwzględnieniem materiałów i robocizny, bez wyposażenia AGD i mebli ruchomych.  
+W raporcie pokazuj **tylko wnioski opisowe i wartości końcowe**, bez ujawniania wzorów czy obliczeń.
 
-🔹 **Wariant C – Kompleksowa adaptacja / standard premium**  
-Zakres: generalny remont, przebudowa układu, wymiana instalacji, wykończenie w wysokim standardzie, oświetlenie projektowe.  
-Koszt: **2000–4000 zł/m² (materiały + robocizna)**.  
-Efekt: pełna transformacja mieszkania, potencjalny wzrost wartości **+15–30%**,  
-ale tylko w przypadku zakupu **poniżej wartości rynkowej** lub nieruchomości wymagającej kapitalnego remontu.  
-Nie zaleca się w blokach starszych niż 1990 rok – efekt ekonomiczny może być neutralny.  
+---
+
+**Wariant A – Home staging / lifting wizualny**  
+Cel: szybka poprawa atrakcyjności oferty sprzedażowej lub wynajmu.  
+Zakres: odświeżenie koloru ścian, oświetlenia, tekstyliów, mebli; zmiana aranżacji bez prac budowlanych.  
+Koszt orientacyjny: **200–350 zł/m²**.  
+Efekt: zwiększenie postrzeganej wartości o 5–10%, skrócenie czasu sprzedaży/najmu o 20–40%.  
+
+---
+
+**Wariant B – Odświeżenie przed zamieszkaniem / najmem**  
+Cel: dostosowanie mieszkania do użytkowania własnego lub komercyjnego (najem).  
+Zakres: malowanie, wymiana podłóg i drzwi, modernizacja łazienki lub kuchni bez wymiany instalacji, korekta układu pomieszczeń.  
+Koszt orientacyjny: **900–1 800 zł/m²**.  
+Efekt: podniesienie wartości rynkowej o 8–15%, możliwy wzrost czynszu o 10–20%.  
+
+---
+
+**Wariant C – Kompleksowy remont / generalna modernizacja**  
+Cel: pełne odnowienie mieszkania (flip, inwestycja premium, zakup z rynku wtórnego).  
+Zakres: wymiana instalacji, stolarki okiennej, tynków, podłóg, pełne wykończenie kuchni i łazienek, przebudowa układu funkcjonalnego.  
+Koszt orientacyjny: **1 800–4 500 zł/m²** (w lokalizacjach premium nawet powyżej 5 000 zł/m²).  
+Efekt: wzrost wartości rynkowej o 15–25%, skrócenie cyklu zwrotu z inwestycji o 1–2 lata.  
+
+---
+
+📊 ZASADY INTERPRETACJI  
+- Nie prezentuj pełnych kalkulacji w raporcie — tylko opis efektów i rekomendacji dla wariantu.  
+- Jeśli użytkownik nie określi celu (flip, zakup, najem), zaprezentuj wszystkie trzy warianty z krótkim porównaniem efektów i kosztów.  
+- W wariancie C zawsze uwzględnij odniesienie do stanu technicznego i realnego potencjału ROI (bez danych wrażliwych).  
 
 ---
 
@@ -273,7 +286,6 @@ Wszystkie kwoty mają charakter orientacyjny i zależą od lokalnych stawek rynk
 
 STYL:
 Ton ekspercki, rzeczowy, bez ozdobników.
-Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
 `,
 },
 
@@ -365,6 +377,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
