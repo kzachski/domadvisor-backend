@@ -195,13 +195,6 @@ const { detectedCity, detectedDistrict } = detectLocation(propertyData);
 // 🏗️ Automatyczne pobranie widełek z pliku baseRegions.json
 const range = getRegionalRange(detectedCity, detectedDistrict);
 
-// 🧠 Uruchomienie modelu DomAdvisor Model
-const estimated = {
-  min: range.min,
-  max: range.max,
-  avg: Math.round((range.min + range.max) / 2),
-};
-
 let standard = "średni";
 
 if (propertyData.includes("Warszawa")) detectedCity = "Warszawa";
@@ -562,6 +555,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
