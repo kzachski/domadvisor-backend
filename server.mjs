@@ -190,7 +190,7 @@ app.post("/api/send-report", async (req, res) => {
     const { userEmail, propertyData } = req.body;
     // 📍 Wykrywanie miasta, dzielnicy i standardu (analogicznie jak w czacie)
 // 🧭 Automatyczne rozpoznanie miasta i dzielnicy
-const { detectedCity, detectedDistrict } = detectLocation(propertyData);
+let { detectedCity, detectedDistrict } = detectLocation(propertyData);
 
 // 🏗️ Automatyczne pobranie widełek z pliku baseRegions.json
 const range = getRegionalRange(detectedCity, detectedDistrict);
@@ -530,6 +530,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
