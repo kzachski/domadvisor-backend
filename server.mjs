@@ -212,29 +212,7 @@ else if (propertyData.includes("Śródmieście")) detectedDistrict = "Śródmie�
 if (propertyData.includes("po remoncie") || propertyData.includes("wysoki standard")) standard = "wysoki";
 else if (propertyData.includes("do remontu") || propertyData.includes("niski standard")) standard = "niski";
 
-// 📈 Uruchomienie algorytmu DomAdvisor Model (import z utils/domAdvisorModel.js)
-const estimated = estimatePriceRange(detectedCity, detectedDistrict, standard);
 
-// 📊 Generowanie krótkiego podsumowania i interpretacji (do promptu PDF)
-const avgValue = estimated.avg;
-let interpretation = "";
-const diffFromMin = ((propertyData.includes("cena") ? parseFloat(propertyData.match(/\d{5,7}/)?.[0]) : avgValue) - estimated.min) / estimated.min * 100;
-
-if (avgValue && diffFromMin < -5) {
-  interpretation = `Z analizy modelu DomAdvisor wynika, że cena tej nieruchomości znajduje się poniżej rynkowych widełek ofertowych dla ${detectedDistrict}. Może to oznaczać okazję inwestycyjną lub potrzebę modernizacji.`;
-} else if (diffFromMin >= -5 && diffFromMin <= 5) {
-  interpretation = `Cena ofertowa mieści się w zakresie średnich wartości rynkowych dla ${detectedDistrict}, co potwierdza, że wycena jest adekwatna do aktualnych warunków rynkowych.`;
-} else {
-  interpretation = `Cena ofertowa przewyższa średnie widełki dla ${detectedDistrict} o ok. ${diffFromMin.toFixed(1)}%, co może być uzasadnione standardem wykończenia lub lokalizacją.`;
-}
-
-const valuationInsight = `
-Dla lokalizacji ${detectedCity} / ${detectedDistrict} (standard: ${standard}),
-wewnętrzny model DomAdvisor oszacował aktualne ceny ofertowe w przedziale
-${estimated.min.toLocaleString("pl-PL")} – ${estimated.max.toLocaleString("pl-PL")} zł/m² (średnia: ${estimated.avg.toLocaleString("pl-PL")} zł/m²).
-
-${interpretation}
-`;
     // 📊 Automatyczna estymacja cen lokalnych (DomAdvisor Model)
 
 // Prosta analiza tekstu wejściowego, aby wykryć miasto i dzielnicę
@@ -552,6 +530,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
