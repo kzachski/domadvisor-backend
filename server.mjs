@@ -236,6 +236,40 @@ Nie stanowi rekomendacji inwestycyjnej w rozumieniu polskiego prawa.
 
 Plan DomAdvisor ma charakter orientacyjny i służy użytkownikowi do oceny racjonalności i etapów inwestycji.  
 Każdy przypadek wymaga indywidualnej weryfikacji technicznej i finansowej.
+// 🏗️ MODUŁ LIFTINGU / ADAPTACJI (sekcja 3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA)
+Uwzględnij trzy warianty liftingu lub adaptacji mieszkania z realistycznymi kosztami (materiały + robocizna) oraz zróżnicowanym potencjałem wpływu na wartość nieruchomości. 
+Nie pokazuj wyliczeń kosztów jednostkowych — prezentuj tylko przedziały i interpretację efektu ekonomicznego. 
+Uwzględnij, że wzrost wartości nie jest gwarantowany i zależy od ceny zakupu, lokalizacji oraz jakości wykonania.
+
+🔹 **Wariant A – Lifting lekki / odświeżenie**  
+Zakres: malowanie, wymiana oświetlenia, elementy dekoracyjne, home staging, kosmetyka wnętrz.  
+Koszt: **300–800 zł/m² (materiały + robocizna)**.  
+Efekt: poprawa wizerunku i szybsza sprzedaż lub wynajem, potencjalny wzrost wartości **+3–8%**.  
+Rekomendowany dla mieszkań w dobrym stanie technicznym lub inwestycji „na wynajem”.
+
+🔹 **Wariant B – Modernizacja funkcjonalna / adaptacja średnia**  
+Zakres: modernizacja kuchni i łazienki, wymiana podłóg i drzwi, lifting układu (np. wydzielenie dodatkowego pokoju), montaż AGD.  
+Koszt: **1000–2000 zł/m² (materiały + robocizna)**.  
+Efekt: wyraźna poprawa funkcjonalności i estetyki, potencjalny wzrost wartości **+8–15%**.  
+Jeśli mieszkanie zostało kupione poniżej wartości rynkowej — możliwy realny zysk netto w przedziale **10–20%**.  
+Wariant o najlepszym stosunku koszt–efekt dla większości inwestycji mieszkaniowych.
+
+🔹 **Wariant C – Kompleksowa adaptacja / standard premium**  
+Zakres: generalny remont, przebudowa układu, wymiana instalacji, wykończenie w wysokim standardzie, oświetlenie projektowe.  
+Koszt: **2000–4000 zł/m² (materiały + robocizna)**.  
+Efekt: pełna transformacja mieszkania, potencjalny wzrost wartości **+15–30%**,  
+ale tylko w przypadku zakupu **poniżej wartości rynkowej** lub nieruchomości wymagającej kapitalnego remontu.  
+Nie zaleca się w blokach starszych niż 1990 rok – efekt ekonomiczny może być neutralny.  
+
+---
+
+W raporcie należy wskazać:  
+- który wariant liftingu jest najbardziej racjonalny w kontekście stanu i lokalizacji mieszkania,  
+- szacunkowy koszt całkowity remontu (np. łączny koszt × powierzchnia mieszkania),  
+- oraz realistyczny (nie maksymalny) potencjał wzrostu wartości lub ROI.  
+
+Dane mają być prezentowane w formie opisowej (interpretacyjnej), bez tabeli kosztów i bez surowych kalkulacji.  
+Wszystkie kwoty mają charakter orientacyjny i zależą od lokalnych stawek rynkowych (Warszawa, Trójmiasto, reszta Polski).
 
 STYL:
 Ton ekspercki, rzeczowy, bez ozdobników.
@@ -331,6 +365,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
