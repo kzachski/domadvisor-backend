@@ -1,0 +1,95 @@
+{
+  "Warszawa": {
+    "Śródmieście": { "min": 20000, "max": 24500 },
+    "Mokotów": { "min": 17000, "max": 21000 },
+    "Wola": { "min": 16500, "max": 20000 },
+    "Praga-Południe": { "min": 13500, "max": 16000 },
+    "Białołęka": { "min": 11500, "max": 13500 },
+    "Wilanów": { "min": 17500, "max": 21500 }
+  },
+  "Kraków": {
+    "Stare Miasto": { "min": 16500, "max": 20500 },
+    "Krowodrza": { "min": 14500, "max": 17500 },
+    "Podgórze": { "min": 13000, "max": 16000 },
+    "Nowa Huta": { "min": 11500, "max": 13500 }
+  },
+  "Gdańsk": {
+    "Śródmieście": { "min": 15000, "max": 17500 },
+    "Wrzeszcz": { "min": 14500, "max": 17000 },
+    "Oliwa": { "min": 14500, "max": 16500 },
+    "Przymorze": { "min": 13000, "max": 14500 },
+    "Żabianka": { "min": 14000, "max": 16000 },
+    "Ujeścisko": { "min": 11000, "max": 13000 }
+  },
+  "Gdynia": {
+    "Śródmieście": { "min": 14000, "max": 16500 },
+    "Redłowo": { "min": 13000, "max": 15000 },
+    "Wielki Kack": { "min": 11500, "max": 13500 }
+  },
+  "Sopot": {
+    "Centrum": { "min": 17500, "max": 22000 },
+    "Kamienny Potok": { "min": 15500, "max": 17500 }
+  },
+  "Wrocław": {
+    "Stare Miasto": { "min": 13500, "max": 16500 },
+    "Krzyki": { "min": 12500, "max": 15000 },
+    "Psie Pole": { "min": 11000, "max": 13500 }
+  },
+  "Poznań": {
+    "Stare Miasto": { "min": 12500, "max": 15000 },
+    "Grunwald": { "min": 12000, "max": 14000 },
+    "Jeżyce": { "min": 12500, "max": 14500 },
+    "Wilda": { "min": 11500, "max": 13500 }
+  },
+  "Łódź": {
+    "Śródmieście": { "min": 9500, "max": 11500 },
+    "Widzew": { "min": 8500, "max": 10000 },
+    "Bałuty": { "min": 8000, "max": 9500 },
+    "Polesie": { "min": 8500, "max": 10000 }
+  },
+  "Katowice": {
+    "Centrum": { "min": 10500, "max": 12500 },
+    "Ligota": { "min": 9500, "max": 11000 },
+    "Brynow": { "min": 11000, "max": 13000 }
+  },
+  "Szczecin": {
+    "Centrum": { "min": 10500, "max": 12500 },
+    "Pogodno": { "min": 9500, "max": 11500 },
+    "Prawobrzeże": { "min": 8500, "max": 10000 }
+  },
+  "Bydgoszcz": {
+    "Centrum": { "min": 9500, "max": 11500 },
+    "Fordon": { "min": 8500, "max": 10000 }
+  },
+  "Lublin": {
+    "Śródmieście": { "min": 10500, "max": 12500 },
+    "Czechów": { "min": 9500, "max": 11000 },
+    "Tatary": { "min": 8500, "max": 10000 }
+  },
+  "Białystok": {
+    "Centrum": { "min": 9500, "max": 11500 },
+    "Piasta": { "min": 8500, "max": 10000 },
+    "Antoniuk": { "min": 8000, "max": 9500 }
+  },
+  "Rzeszów": {
+    "Śródmieście": { "min": 10500, "max": 12000 },
+    "Drabinianka": { "min": 9500, "max": 11000 }
+  },
+  "Olsztyn": {
+    "Centrum": { "min": 9500, "max": 11500 },
+    "Nagórki": { "min": 8500, "max": 10000 }
+  },
+  "Toruń": {
+    "Centrum": { "min": 9500, "max": 11500 },
+    "Rubinkowo": { "min": 8500, "max": 10000 }
+  },
+  "Kielce": {
+    "Centrum": { "min": 9000, "max": 10500 },
+    "Szydłówek": { "min": 8500, "max": 9500 }
+  },
+  "Opole": {
+    "Centrum": { "min": 9500, "max": 11000 },
+    "Zaodrze": { "min": 8500, "max": 9500 }
+  },
+  "Polska": { "min": 9500, "max": 12500 }
+}
