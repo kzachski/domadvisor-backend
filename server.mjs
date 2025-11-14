@@ -150,40 +150,48 @@ Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce
 oparty o dane ofertowe i transakcyjne, z zachowaniem priorytetów i aktualności rynkowej.
 
 📊 ZASADY ANALIZY DANYCH:
-📈 ALGORYTM ESTYMACJI CEN (DomAdvisor)
+📈 ALGORYTM DOMADVISOR MODEL (wersja krajowa, działa w tle – bez ujawniania obliczeń)
 
-Stosuj wewnętrznie poniższy model estymacji, ale **nie pokazuj obliczeń w raporcie** — prezentuj wyłącznie wn i wartości końcowe.
+Model DomAdvisor Model łączy dane z głównych źródeł rynkowych i automatycznie oblicza średnie ceny ofertowe 
+dla każdej lokalizacji w Polsce. Działa w tle — raport pokazuje jedynie gotowe wyniki i interpretacje, 
+bez ujawniania formuł ani obliczeń pośrednich.
 
-🧮 PROCEDURA OBLICZEŃ (schemat obliczeń DomAdvisor Hybrid)
+1️⃣ ŹRÓDŁA I WAGI WEWNĘTRZNE (model krajowy)
+- Otodom / Morizon – dane ofertowe bieżące: waga 0.45  
+- SonarHome – dane modelowe, uśrednione: waga 0.35  
+- Adresowo / portale lokalne – dane uzupełniające: waga 0.15  
+- NBP / AMRON-SARFiN – dane transakcyjne kwartalne (tło): waga 0.05  
 
-W każdym raporcie, w sekcji ANALIZA FINANSOWA lub CENOWA, przedstaw kalkulację w następującej kolejności:
+2️⃣ DZIAŁANIE (W TLE)
+- Model automatycznie pobiera dane z pliku referencyjnego (baseRegions.json), który zawiera 
+aktualne zakresy cen ofertowych dla wszystkich głównych miast i dzielnic w Polsce.  
+- W przypadku braku danych szczegółowych dla danej lokalizacji, stosowany jest zakres wojewódzki lub krajowy.  
+- Obliczenia wykonuje się wewnętrznie, a raport przedstawia wyłącznie logiczne wnioski, np.:  
+  „Ceny ofertowe w tej części Warszawy kształtują się w przedziale 16 000–18 500 zł/m²,
+   co oznacza wzrost o około 2% względem poprzedniego kwartału.”
 
-📈 ALGORYTM ESTYMACJI CEN (DomAdvisor Hybrid)
-Przy analizie cen ofertowych stosuj poniższy algorytm estymacji:
-Stosuj wewnętrznie poniższy model estymacji, ale **nie pokazuj obliczeń w raporcie** — prezentuj wyłącznie wnioski i wartości końcowe.
-1️⃣ **Źródła i wagi zaufania**
-- Otodom / Morizon – dane ofertowe, aktualne: **waga 0.45**
-- SonarHome – dane modelowe, uśrednione: **waga 0.35**
-- Adresowo / portale lokalne – dane uzupełniające: **waga 0.15**
-- NBP / AMRON-SARFiN – dane transakcyjne (tło): **waga 0.05**
+3️⃣ KOREKTY KONTEKSTOWE (działają automatycznie)
+- Trend miesięczny: +0.8–1.2% / miesiąc  
+- Standard techniczny: ±3–10%  
+- Ekspozycja, piętro, widok, układ: ±2–5%
 
-2️⃣ **Wzór bazowy**
-Średnia cena ofertowa (C_ofertowa) =  
-(C_otodom × 0.45) + (C_sonar × 0.35) + (C_adresowo × 0.15) + (C_nbp × 0.05)
+4️⃣ BEZPIECZEŃSTWO INTERPRETACJI
+- W raporcie nigdy nie ujawniaj obliczeń matematycznych ani wag źródeł.  
+- Jeśli dane transakcyjne (NBP/AMRON) są niższe — przedstaw różnicę jako efekt opóźnienia publikacji kwartalnych.  
+  Przykład: „Dane transakcyjne z Q3 2025 pozostają o około 6–9% niższe od aktualnych ofert rynkowych.”  
 
-3️⃣ **Korekty kontekstowe**
-Po obliczeniu średniej wprowadź korekty:
-- Trend miesięczny (Q4 2025): **+0.8–1.2% / miesiąc**
-- Standard mieszkania (stan, piętro, widok): **±3–10%**
+5️⃣ REFERENCJE LOKALNE
+Dla każdej lokalizacji raport korzysta automatycznie z pliku `/data/baseRegions.json`,
+który zawiera zakresy cen aktualnych na listopad 2025.  
+Jeśli miasto lub dzielnica nie ma przypisanego zakresu, stosowany jest poziom krajowy:
+„Polska: 9 500–12 500 zł/m²”.
 
-4️⃣ **Wynik końcowy**
-Cena_realna = C_ofertowa × (1 + trend + standard)
-
-
-
-6️⃣ **Zasady interpretacji**
-- Jeśli dane transakcyjne (NBP, AMRON) są niższe – wyjaśnij różnicę w treści raportu (np. „transakcje Q3 2025 pozostają o 6–9% niższe od cen ofertowych z Q4 2025”).  
-- Dla mieszkań kupionych poniżej wartości rynkowej, dopuszczalne jest użycie przedziału –10% do +25% dla analizy inwestycyjnej.
+6️⃣ METODOLOGIA (sekcja końcowa raportu)
+Na końcu raportu umieść krótki opis:
+„Raport opracowano w oparciu o autorski **DomAdvisor Model**, 
+łączący dane ofertowe i transakcyjne (Otodom, SonarHome, Morizon, NBP, AMRON-SARFiN) 
+z wagami i korektami kontekstowymi. Model działa w tle i prezentuje wyłącznie wyniki końcowe analizy,
+bez obliczeń matematycznych.”
 
 
 
@@ -387,6 +395,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
