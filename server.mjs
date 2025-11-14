@@ -14,7 +14,10 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 // 📚 Import danych referencyjnych (wszystkie miasta i dzielnice Polski)
-import baseRegions from "./data/baseRegions.json" assert { type: "json" };
+
+const baseRegions = JSON.parse(
+  fs.readFileSync(path.resolve("./data/baseRegions.json"), "utf-8")
+);
 
 // 🔍 Funkcja automatycznego rozpoznania lokalizacji
 function detectLocation(propertyText = "") {
@@ -559,6 +562,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
