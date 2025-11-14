@@ -236,9 +236,6 @@ ${estimated.min.toLocaleString("pl-PL")} – ${estimated.max.toLocaleString("pl-
 ${interpretation}
 `;
     // 📊 Automatyczna estymacja cen lokalnych (DomAdvisor Model)
-let detectedCity = "Gdańsk";
-let detectedDistrict = "Żabianka";
-let standard = "średni";
 
 // Prosta analiza tekstu wejściowego, aby wykryć miasto i dzielnicę
 if (propertyData.includes("Warszawa")) detectedCity = "Warszawa";
@@ -555,6 +552,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
