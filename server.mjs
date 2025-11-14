@@ -7,11 +7,68 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import OpenAI from "openai";
+import { estimatePriceRange } from "./utils/domAdvisorModel.js";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
+// 📚 Import danych referencyjnych (wszystkie miasta i dzielnice Polski)
+import baseRegions from "./data/baseRegions.json" assert { type: "json" };
+
+// 🔍 Funkcja automatycznego rozpoznania lokalizacji
+function detectLocation(propertyText = "") {
+  propertyText = propertyText.toLowerCase();
+  let detectedCity = "Polska";
+  let detectedDistrict = null;
+
+  // Szukamy miasta
+  for (const city of Object.keys(baseRegions)) {
+    if (propertyText.includes(city.toLowerCase())) {
+      detectedCity = city;
+      break;
+    }
+  }
+
+  // Szukamy dzielnicy (jeśli w danym mieście są dzielnice)
+  if (baseRegions[detectedCity]) {
+    for (const district of Object.keys(baseRegions[detectedCity])) {
+      if (propertyText.includes(district.toLowerCase())) {
+        detectedDistrict = district;
+        break;
+      }
+    }
+  }
+
+  return { detectedCity, detectedDistrict };
+}
+
+// 📈 Funkcja pobierająca dane z pliku baseRegions.json
+function getRegionalRange(city, district) {
+  const fallback = baseRegions["Polska"];
+  if (baseRegions[city]) {
+    if (district && baseRegions[city][district]) {
+      return baseRegions[city][district];
+    } else {
+      // jeśli brak dzielnicy → średnia dla miasta
+      const avgCity = Object.values(baseRegions[city]).reduce(
+        (acc, v) => {
+          acc.min += v.min;
+          acc.max += v.max;
+          return acc;
+        },
+        { min: 0, max: 0 }
+      );
+      const count = Object.keys(baseRegions[city]).length;
+      return {
+        min: Math.round(avgCity.min / count),
+        max: Math.round(avgCity.max / count),
+      };
+    }
+  }
+  return fallback; // jeśli miasto nieznane → średnia krajowa
+}
+
 
 // 🔐 Załaduj zmienne środowiskowe (.env lokalnie lub Render Environment)
 dotenv.config();
@@ -128,6 +185,86 @@ Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, s
 app.post("/api/send-report", async (req, res) => {
   try {
     const { userEmail, propertyData } = req.body;
+    // 📍 Wykrywanie miasta, dzielnicy i standardu (analogicznie jak w czacie)
+// 🧭 Automatyczne rozpoznanie miasta i dzielnicy
+const { detectedCity, detectedDistrict } = detectLocation(propertyData);
+
+// 🏗️ Automatyczne pobranie widełek z pliku baseRegions.json
+const range = getRegionalRange(detectedCity, detectedDistrict);
+
+// 🧠 Uruchomienie modelu DomAdvisor Model
+const estimated = {
+  min: range.min,
+  max: range.max,
+  avg: Math.round((range.min + range.max) / 2),
+};
+
+let standard = "średni";
+
+if (propertyData.includes("Warszawa")) detectedCity = "Warszawa";
+else if (propertyData.includes("Kraków")) detectedCity = "Kraków";
+else if (propertyData.includes("Gdańsk")) detectedCity = "Gdańsk";
+else if (propertyData.includes("Wrocław")) detectedCity = "Wrocław";
+else if (propertyData.includes("Poznań")) detectedCity = "Poznań";
+
+if (propertyData.includes("Żabianka")) detectedDistrict = "Żabianka";
+else if (propertyData.includes("Oliwa")) detectedDistrict = "Oliwa";
+else if (propertyData.includes("Wrzeszcz")) detectedDistrict = "Wrzeszcz";
+else if (propertyData.includes("Przymorze")) detectedDistrict = "Przymorze";
+else if (propertyData.includes("Śródmieście")) detectedDistrict = "Śródmieście";
+
+if (propertyData.includes("po remoncie") || propertyData.includes("wysoki standard")) standard = "wysoki";
+else if (propertyData.includes("do remontu") || propertyData.includes("niski standard")) standard = "niski";
+
+// 📈 Uruchomienie algorytmu DomAdvisor Model (import z utils/domAdvisorModel.js)
+const estimated = estimatePriceRange(detectedCity, detectedDistrict, standard);
+
+// 📊 Generowanie krótkiego podsumowania i interpretacji (do promptu PDF)
+const avgValue = estimated.avg;
+let interpretation = "";
+const diffFromMin = ((propertyData.includes("cena") ? parseFloat(propertyData.match(/\d{5,7}/)?.[0]) : avgValue) - estimated.min) / estimated.min * 100;
+
+if (avgValue && diffFromMin < -5) {
+  interpretation = `Z analizy modelu DomAdvisor wynika, że cena tej nieruchomości znajduje się poniżej rynkowych widełek ofertowych dla ${detectedDistrict}. Może to oznaczać okazję inwestycyjną lub potrzebę modernizacji.`;
+} else if (diffFromMin >= -5 && diffFromMin <= 5) {
+  interpretation = `Cena ofertowa mieści się w zakresie średnich wartości rynkowych dla ${detectedDistrict}, co potwierdza, że wycena jest adekwatna do aktualnych warunków rynkowych.`;
+} else {
+  interpretation = `Cena ofertowa przewyższa średnie widełki dla ${detectedDistrict} o ok. ${diffFromMin.toFixed(1)}%, co może być uzasadnione standardem wykończenia lub lokalizacją.`;
+}
+
+const valuationInsight = `
+Dla lokalizacji ${detectedCity} / ${detectedDistrict} (standard: ${standard}),
+wewnętrzny model DomAdvisor oszacował aktualne ceny ofertowe w przedziale
+${estimated.min.toLocaleString("pl-PL")} – ${estimated.max.toLocaleString("pl-PL")} zł/m² (średnia: ${estimated.avg.toLocaleString("pl-PL")} zł/m²).
+
+${interpretation}
+`;
+    // 📊 Automatyczna estymacja cen lokalnych (DomAdvisor Model)
+let detectedCity = "Gdańsk";
+let detectedDistrict = "Żabianka";
+let standard = "średni";
+
+// Prosta analiza tekstu wejściowego, aby wykryć miasto i dzielnicę
+if (propertyData.includes("Warszawa")) detectedCity = "Warszawa";
+if (propertyData.includes("Kraków")) detectedCity = "Kraków";
+if (propertyData.includes("Wrocław")) detectedCity = "Wrocław";
+if (propertyData.includes("Poznań")) detectedCity = "Poznań";
+if (propertyData.includes("Gdańsk")) detectedCity = "Gdańsk";
+
+if (propertyData.includes("Przymorze")) detectedDistrict = "Przymorze";
+if (propertyData.includes("Wrzeszcz")) detectedDistrict = "Wrzeszcz";
+if (propertyData.includes("Oliwa")) detectedDistrict = "Oliwa";
+if (propertyData.includes("Żabianka")) detectedDistrict = "Żabianka";
+if (propertyData.includes("Śródmieście")) detectedDistrict = "Śródmieście";
+
+if (propertyData.includes("wysoki standard") || propertyData.includes("po remoncie"))
+  standard = "wysoki";
+else if (propertyData.includes("do remontu") || propertyData.includes("niski standard"))
+  standard = "niski";
+
+const estimated = estimatePriceRange(detectedCity, detectedDistrict, standard);
+console.log(`📈 Estymacja DomAdvisor Model (${detectedCity}/${detectedDistrict}, ${standard}):`, estimated);
+
     if (!userEmail || !propertyData)
       return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
 
@@ -141,6 +278,33 @@ app.post("/api/send-report", async (req, res) => {
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
     // 🧠 Generowanie pełnego raportu eksperckiego z (systemPrompt)
+    // 📊 Integracja modelu DomAdvisor z promptem raportu
+const priceSummary = `Dla lokalizacji ${detectedCity} / ${detectedDistrict} (standard: ${standard}), 
+wewnętrzny model DomAdvisor oszacował bieżący zakres cen ofertowych w przedziale 
+${estimated.min.toLocaleString("pl-PL")} – ${estimated.max.toLocaleString("pl-PL")} zł/m² 
+(średnia: ${estimated.avg.toLocaleString("pl-PL")} zł/m²). 
+Dane stanowią tło analityczne dla sekcji „Analiza finansowa”.`;
+    // 📈 Automatyczna interpretacja wyników DomAdvisor Model
+let interpretation = "";
+
+const avgValue = estimated.avg;
+const diffFromMin = ((propertyData.includes("cena") ? parseFloat(propertyData.match(/\d{5,7}/)?.[0]) : avgValue) - estimated.min) / estimated.min * 100;
+const diffFromAvg = diffFromMin > 0 ? "powyżej" : "poniżej";
+
+if (avgValue && diffFromMin < -5) {
+  interpretation = `Z analizy modelu DomAdvisor wynika, że cena tej nieruchomości znajduje się wyraźnie poniżej rynkowych widełek ofertowych dla ${detectedDistrict}. Może to wskazywać na atrakcyjność inwestycyjną lub konieczność modernizacji.`;
+} else if (diffFromMin >= -5 && diffFromMin <= 5) {
+  interpretation = `Cena ofertowa analizowanej nieruchomości mieści się w zakresie średnich wartości rynkowych dla lokalizacji ${detectedDistrict}. Oznacza to, że wycena jest zbliżona do przeciętnego poziomu rynkowego.`;
+} else {
+  interpretation = `Cena nieruchomości plasuje się powyżej średnich widełek ofertowych (${diffFromMin.toFixed(1)}% ${diffFromAvg} średniej), co może wynikać z podwyższonego standardu wykończenia, atrakcyjnego piętra lub widoku.`;
+}
+
+// Dodanie interpretacji do promptu
+const valuationInsight = `
+${priceSummary}
+
+${interpretation}
+`;
    const messages = [
  {
   role: "system",
@@ -395,6 +559,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
