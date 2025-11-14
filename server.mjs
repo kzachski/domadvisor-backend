@@ -200,6 +200,42 @@ Zachowaj strukturę, ton i narrację eksperta DomAdvisor.
 5️⃣ REKOMENDACJA KOŃCOWA  
 6️⃣ PLAN 30 / 60 / 90 DNI  
 7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
+6️⃣ PLAN 30 / 60 / 90 DNI  
+Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)  
+
+Plan 30 / 60 / 90 dni generowany jest automatycznie w sekcji „Rekomendacja końcowa”,  
+jeśli analiza dotyczy zakupu, inwestycji typu flip lub najmu.  
+Ma charakter orientacyjny i służy uporządkowaniu etapów procesu decyzyjnego.  
+Nie stanowi rekomendacji inwestycyjnej w rozumieniu polskiego prawa.  
+
+---
+
+**Dla inwestycji typu Flip:**  
+- **30 dni** – negocjacje ceny, due diligence techniczne, weryfikacja stanu prawnego, rezerwacja lokalu.  
+- **60 dni** – finalizacja zakupu, podpisanie aktu notarialnego, rozpoczęcie remontu lub liftingu.  
+- **90 dni** – zakończenie prac, przygotowanie sesji zdjęciowej i publikacja ogłoszenia sprzedaży.  
+
+**Dla zakupu na własne potrzeby:**  
+- **30 dni** – analiza techniczna i estetyczna, weryfikacja formalna nieruchomości, negocjacje ceny.  
+- **60 dni** – finalizacja transakcji i finansowania (kredyt, akt notarialny).  
+- **90 dni** – odbiór lokalu, ewentualne wykończenie lub decyzja o wynajmie.  
+
+**Dla najmu (inwestycja pasywna lub krótkoterminowa):**  
+- **30 dni** – lifting A/B (odświeżenie lub częściowa modernizacja), przygotowanie dokumentacji fotograficznej.  
+- **60 dni** – publikacja oferty i rozpoczęcie najmu.  
+- **90 dni** – monitoring efektów najmu, analiza przychodów i ewentualna korekta stawek.  
+
+---
+
+**PROGI DECYZYJNE (dla analizy ekonomicznej, nie jako rekomendacja):**  
+- **Flip:** ROI netto ≥ 12%  
+- **Najem:** cap rate ≥ 5,5%, cash-on-cash ≥ 8%, DSCR ≥ 1,25  
+- **Zakup:** cena/m² ≤ średnia rynkowa +10% (z wyjątkiem lokalizacji premium)  
+
+---
+
+Plan DomAdvisor ma charakter orientacyjny i służy użytkownikowi do oceny racjonalności i etapów inwestycji.  
+Każdy przypadek wymaga indywidualnej weryfikacji technicznej i finansowej.
 
 STYL:
 Ton ekspercki, rzeczowy, bez ozdobników.
@@ -295,6 +331,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
