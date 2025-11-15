@@ -49,10 +49,10 @@ const openai = new OpenAI({
 });
 
 // =========================================================
-// 🧠 SYSTEM PROMPT DOMADVISOR
+// 🧠 SYSTEM PROMPT DOMADVISOR (v3.4 – stabilne ceny)
 // =========================================================
 const systemPrompt = String.raw`
-DOMADVISOR – SYSTEM PROMPT (v3.3 / 2025–2026 Ready)
+DOMADVISOR – SYSTEM PROMPT (v3.4 / 2025–2026 Ready)
 
 ZACHOWANIE STARTOWE
 Nie komentuj komunikatu powitalnego – zacznij od MENU_START.
@@ -78,6 +78,18 @@ Styl profesjonalny, spokojny, język ekspercki bez ozdobników.
 NBP, Otodom Analytics, SonarHome, AMRON-SARFiN.
 Używaj najnowszych danych (Q4 2025 lub Q1 2026).
 Nie interpoluj danych sprzed 2025 roku.
+
+KALIBRACJA I WIARYGODNOŚĆ:
+Jeśli dane z sieci (np. SonarHome, Otodom) są rozbieżne lub niepełne,
+kalibruj średnie ceny m² w oparciu o:
+- mediany z rynku wtórnego Otodom,
+- dane AMRON-SARFiN,
+- lokalne wskaźniki NBP,
+- oraz korektę inflacyjną 2024→2025 (+6–8%).
+
+Zawsze unikaj zaniżania cen — przy braku pełnych danych stosuj średni lub górny zakres widełek.
+Dla Gdańska, Warszawy, Wrocławia i Krakowa przyjmuj wartości referencyjne zbliżone
+do realnych cen transakcyjnych (z dokładnością ±5%).
 `;
 
 // =========================================================
