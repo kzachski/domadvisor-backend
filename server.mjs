@@ -167,7 +167,8 @@ Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce
 >
 > W raporcie nie pokazuj źródeł ani linków – wpleć dane opisowo, np.:
 >
-> „Według danych SonarHome i Otodom Analytics (listopad 2025), średnia cena ofertowa w Gdańsku-Żabiance wynosi ok. **14 500 zł/m²**, a typowy zakres rynkowy mieści się między **13 900 a 15 700 zł/m²**.”
+>„Według danych SonarHome i Otodom Analytics (listopad 2025), średnia cena ofertowa w [lokalizacja użytkownika] wynosi ok. **[średnia cena] zł/m²**, a typowy zakres rynkowy mieści się między **[dolny przedział] a [górny przedział] zł/m²**.”
+
 >
 > Jeśli dane z różnych źródeł różnią się o więcej niż 10 %, zastosuj uśrednienie.
 >
@@ -189,13 +190,13 @@ Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesł
 Zachowaj strukturę i ton eksperta.
 
 📊 STRUKTURA
-1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
-2️⃣ ANALIZA FINANSOWA (Jakub)  
-3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
-4️⃣ RYZYKA  
-5️⃣ REKOMENDACJA KOŃCOWA  
-6️⃣ PLAN 30 / 60 / 90 DNI  
-7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
+1️ STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️ ANALIZA FINANSOWA (Jakub)  
+3️ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
+4️ RYZYKA  
+5️ REKOMENDACJA KOŃCOWA  
+6️ PLAN 30 / 60 / 90 DNI  
+7️ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
 
 STYL
 Ton ekspercki, rzeczowy, bez ozdobników.
@@ -290,6 +291,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
