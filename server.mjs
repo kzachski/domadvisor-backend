@@ -117,17 +117,6 @@ Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, s
 // =========================================================
 // 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail)
 // =========================================================
-const messages = [
-  {
-    role: "system",
-    content: `${systemPrompt}\n\n📊 DANE RYNKOWE (online, SonarHome / Otodom, listopad 2025):\n${liveData}`,
-  },
-  {
-    role: "user",
-    content: `${propertyData}\n\nPrzygotuj pełny raport ekspercki premium – minimum 9 000 znaków, zgodnie z zasadami DomAdvisor. Uwzględnij powyższe dane online, ale potraktuj je jako kontekst rynkowy.`,
-  },
-];
-
 
     // 🌐 Dane rynkowe
     const liveData = await getLiveMarketData(propertyData);
@@ -240,5 +229,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
+
 
 
