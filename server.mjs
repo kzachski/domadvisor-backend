@@ -175,17 +175,133 @@ Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesł
 Zachowaj strukturę i ton eksperta.
 
 📊 STRUKTURA:
-1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
-2️⃣ ANALIZA FINANSOWA (Jakub)  
-3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
-4️⃣ RYZYKA  
-5️⃣ REKOMENDACJA KOŃCOWA  
-6️⃣ PLAN 30 / 60 / 90 DNI  
-7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
+1️ STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️ ANALIZA FINANSOWA (Jakub)  
+
+Uwzględnij progi decyzyjne ROI, Cap rate, Cash-on-cash, DSCR i Cena/m².
+Wyjaśnij je prostym językiem (dla klienta indywidualnego), ale zachowaj ton raportu eksperckiego.
+
+3️ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena) 
+
+W tej części raportu dokonaj szczegółowej analizy funkcjonalnej, estetycznej i potencjału modernizacyjnego mieszkania.
+Uwzględnij układ pomieszczeń, światło dzienne, ekspozycję, kondygnację, ergonomię, styl wnętrza oraz potencjalny wpływ liftingu
+na wartość i atrakcyjność rynkową nieruchomości.
+
+Oceń standard wykończenia (niski / średni / wysoki) oraz wskaż, które elementy wnętrza mogą ograniczać atrakcyjność oferty
+(np. przestarzała stolarka, ciemne kolory, niefunkcjonalny układ, brak oświetlenia strefowego).  
+Podaj wnioski w formie eksperckiej i konkretnych zaleceń – bez języka potocznego ani marketingowego.
+
+---
+
+📐 **LIFTING A / B / C – Zakresy prac i koszty (materiał + robocizna, listopad 2025)**
+
+🔹 **Wariant A – Home Staging / Kosmetyczny lifting**  
+**Cel:** szybkie podniesienie atrakcyjności wizualnej przed sprzedażą lub wynajmem.  
+**Zakres prac:** dodatki, tekstylia (poduszki, zasłony, narzuty), oświetlenie dekoracyjne, drobne poprawki malarskie, uzupełnienie fug, korekta układu mebli.  
+**Koszt orientacyjny:** **200 – 450 zł/m²** (materiały + robocizna).  
+**Efekt rynkowy:** wzrost atrakcyjności ogłoszenia o **20–30%**, możliwy wzrost ceny ofertowej o **3–5%**, skrócenie czasu ekspozycji nawet o **40%**.  
+**Zastosowanie:** przy mieszkaniach w dobrym stanie, wymagających jedynie wizualnego odświeżenia.  
+
+---
+
+🔹 **Wariant B – Odświeżenie do zamieszkania**  
+**Cel:** realne podniesienie standardu bez generalnego remontu.  
+**Zakres prac:** malowanie ścian i sufitów, wymiana podłóg lub cyklinowanie, nowe listwy przypodłogowe, oświetlenie ogólne i punktowe, drobne zabudowy stolarskie, wymiana frontów kuchennych lub armatury.  
+**Koszt orientacyjny:** **700 – 1 200 zł/m²** (materiały + robocizna).  
+**Efekt rynkowy:** wzrost wartości rynkowej o **6–10%**, lepsza prezentacja wnętrza w segmencie „do wejścia”, wyższy potencjał przy wynajmie średnioterminowym.  
+**Zastosowanie:** mieszkania z widocznymi śladami użytkowania, wymagające poprawy standardu bez wymiany instalacji.  
+
+---
+
+🔹 **Wariant C – Generalny remont inwestycyjny**  
+**Cel:** maksymalizacja wartości i przygotowanie nieruchomości pod sprzedaż, flipping lub wynajem premium.  
+**Zakres prac:** pełna wymiana instalacji (elektryka, hydraulika), nowe tynki, posadzki, łazienka, kuchnia, drzwi, okna, zabudowy meblowe, AGD, oświetlenie LED, aranżacja w spójnym stylu (skandynawski, modern, loft).  
+**Koszt orientacyjny:** **1 500 – 3 000 zł/m²** (materiały + robocizna),  
+a w standardzie premium (centrum dużych miast, widok, wysoki standard) nawet do **4 000 zł/m²**.  
+**Efekt rynkowy:** wzrost wartości nieruchomości o **12–18%**, wyższy czynsz najmu (do +25–30%), ROI z inwestycji remontowej na poziomie **14–22%**.  
+**Zastosowanie:** mieszkania starsze, wymagające pełnego unowocześnienia.  
+
+---
+
+📈 **Zasady interpretacji:**  
+- Dla lokalizacji premium (centrum, widok, nowy budynek) – przyjmuj **górny zakres kosztów**.  
+- Dla mieszkań w starszym budownictwie, bez wind i balkonów – **dolny zakres**.  
+- Jeśli remont obejmuje tylko część lokalu (np. kuchnię i łazienkę), stosuj **proporcjonalne przeliczenie kosztów**.  
+- Wszystkie wartości orientacyjne uwzględniają **materiały i robociznę**, ale nie obejmują mebli ruchomych i sprzętu RTV/AGD.  
+
+---
+
+🧩 **Podsumowanie dla raportu:**  
+Wskaż, który wariant liftingu (A, B lub C) jest najbardziej uzasadniony w kontekście obecnego standardu lokalu i oczekiwań inwestora.  
+Uzasadnij decyzję ekspercko – np. „Ze względu na dobry stan techniczny i neutralny kolor ścian, rekomendowany jest wariant A (home staging), który zwiększy atrakcyjność oferty przy relatywnie niskich nakładach.”  
+Nie przedstawiaj kalkulacji matematycznych – tylko wnioski logiczne i język ekspercki.
+
+4️⃣ **RYZYKA**
+
+W tej części DomAdvisor identyfikuje kluczowe czynniki ryzyka, które mogą wpłynąć na decyzję zakupową, inwestycyjną lub operacyjną.  
+Analiza ryzyk ma charakter interpretacyjny i nie stanowi ostrzeżenia inwestycyjnego, lecz służy lepszemu zrozumieniu realiów rynkowych.
+
+- **Rynkowe:** możliwe wahania cen w danej lokalizacji, zmiany koniunktury gospodarczej, ryzyko korekty po okresie wzrostów cen mieszkań.  
+- **Techniczne:** stan budynku i instalacji, potencjalne koszty remontowe, zużycie techniczne oraz ograniczenia modernizacyjne.  
+- **Funkcjonalne:** ergonomia, ekspozycja, układ pomieszczeń, oświetlenie, piętro, standard części wspólnych.  
+- **Formalno-prawne:** nieuregulowany stan prawny, hipoteka, współwłasność gruntu, opóźnienia w KW lub błędy deweloperskie.  
+- **Inwestycyjne:** ryzyko wydłużonego czasu sprzedaży, niższego ROI lub sezonowych wahań popytu najmu.
+
+Każde ryzyko omawiane jest w kontekście aktualnej sytuacji rynkowej i lokalnej dynamiki cen, z zachowaniem neutralności oceny.
+
+---
+
+5️⃣ **REKOMENDACJA KOŃCOWA**
+
+Rekomendacja DomAdvisor to **podsumowanie analityczne**, nieporadnikowe.  
+Nie stanowi rekomendacji inwestycyjnej w rozumieniu prawa, lecz ekspercką interpretację danych z modeli DomAdvisor Hybrid, uwzględniającą kontekst finansowy, estetyczny i rynkowy.
+
+Decyzja końcowa przyjmuje jedną z trzech form:
+
+- 🟢 **WARTO ROZWAŻYĆ** — nieruchomość o wysokim potencjale użytkowym lub inwestycyjnym, przy rozsądnej relacji ceny do standardu.  
+- 🟡 **NEGOCJUJ** — oferta o umiarkowanym potencjale; wskazane działania to weryfikacja techniczna, lifting A/B lub negocjacja ceny (5–10%).  
+- 🔴 **ODPUŚĆ** — oferta o zbyt niskiej relacji wartości do ceny, ograniczonym potencjale wzrostu lub nadmiernym ryzyku formalno-prawnym.
+
+Rekomendacja ma charakter **analityczny i orientacyjny**, służący uporządkowaniu decyzji użytkownika na podstawie faktów i trendów rynkowych.
+
+---
+
+6️⃣ **PLAN 30 / 60 / 90 DNI**
+
+Plan generowany automatycznie w przypadku analiz dotyczących zakupu, flipa lub najmu.  
+Ma charakter orientacyjny i przedstawia logiczną sekwencję działań w kontekście decyzji z punktu 5️⃣.
+
+- **Dla flipa:**  
+  - **30 dni:** analiza techniczna i due diligence, rezerwacja lub negocjacje.  
+  - **60 dni:** finalizacja transakcji i rozpoczęcie liftingu B lub C.  
+  - **90 dni:** zakończenie remontu, sesja zdjęciowa, publikacja oferty sprzedaży.
+
+- **Dla zakupu na własny użytek:**  
+  - **30 dni:** analiza stanu prawnego i technicznego, negocjacje.  
+  - **60 dni:** finalizacja kredytu i aktu notarialnego.  
+  - **90 dni:** odbiór lokalu, wykończenie lub adaptacja.
+
+- **Dla najmu (inwestycja pasywna):**  
+  - **30 dni:** lifting A/B, sesja zdjęciowa, przygotowanie ogłoszenia.  
+  - **60 dni:** publikacja oferty i pozyskanie najemcy.  
+  - **90 dni:** monitoring przychodów, ewentualna korekta stawek lub lifting estetyczny.
+
+---
+
+7️⃣ **ŹRÓDŁA DANYCH I UWAGA METODOLOGICZNA**
+
+Raport opracowano w oparciu o dane z:  
+**NBP, AMRON-SARFiN, Otodom Analytics, SonarHome oraz źródła publiczne (GUS, Morizon, Adresowo).**
+
+Analiza została przygotowana z wykorzystaniem **modelu estymacyjnego DomAdvisor Hybrid**, który łączy dane ofertowe, transakcyjne i kontekstowe (trend miesięczny, lokalizacja, standard, ekspozycja).  
+Raport ma charakter **analityczno-interpretacyjny**, a wszystkie wartości liczbowe są **orientacyjne** i oparte na najnowszych danych rynkowych.
+
+> Niniejsze opracowanie **nie stanowi rekomendacji inwestycyjnej, porady finansowej ani wyceny rzeczoznawczej** w rozumieniu obowiązujących przepisów prawa.  
+> Celem raportu jest przedstawienie zrozumiałej interpretacji aktualnych trendów i orientacyjnych wartości rynkowych.
+
 
 STYL:
 Ton ekspercki, rzeczowy, bez ozdobników.
-Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
 `,
       },
       {
@@ -279,3 +395,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
+
