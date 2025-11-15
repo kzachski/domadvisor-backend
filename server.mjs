@@ -1,6 +1,6 @@
 // =========================================================
-// 🏠 DOMADVISOR PREMIUM BACKEND (Render Ready)
-// GPT-4.1 + SMTP (home.pl) + PDF + Serper.dev (live data)
+// 🏠 DOMADVISOR PREMIUM BACKEND (Render Ready, v3.6 FINAL)
+// GPT-5 + SMTP (home.pl) + PDF + Serper.dev (live data, public sources)
 // =========================================================
 
 import express from "express";
@@ -24,12 +24,12 @@ async function getLiveMarketData(location) {
     const response = await axios.get("https://google.serper.dev/search", {
       headers: { "X-API-KEY": process.env.SERPER_API_KEY },
       params: {
-        q: `średnie ceny mieszkań ${location} listopad 2025 site:sonarhome.pl OR site:otodom.pl`,
+        q: `średnie ceny mieszkań ${location} listopad 2025 site:sonarhome.pl OR site:adresowo.pl OR site:tabelaofert.pl OR site:nieruchomosci-online.pl`,
         num: 5,
       },
     });
 
-    const results = response.data.organic?.map(r => r.snippet).join("\n") || "";
+    const results = response.data.organic?.map((r) => r.snippet).join("\n") || "";
     return results || "Brak danych z sieci.";
   } catch (error) {
     console.error("❌ Błąd pobierania danych rynkowych:", error.message);
@@ -49,47 +49,44 @@ const openai = new OpenAI({
 });
 
 // =========================================================
-// 🧠 SYSTEM PROMPT DOMADVISOR (v3.4 – stabilne ceny)
+// 🧠 SYSTEM PROMPT DOMADVISOR (v3.6 – public data only)
 // =========================================================
 const systemPrompt = String.raw`
-DOMADVISOR – SYSTEM PROMPT (v3.4 / 2025–2026 Ready)
+DOMADVISOR – SYSTEM PROMPT (v3.6 / 2025–2026 Ready)
 
-ZACHOWANIE STARTOWE
+ZACHOWANIE STARTOWE  
 Nie komentuj komunikatu powitalnego – zacznij od MENU_START.
 
-MENU_START:
-1. Analiza nieruchomości na sprzedaż
-2. Analiza nieruchomości na wynajem
-3. Ocena mieszkania pod flipa
-4. Rekomendacja rynkowa dla inwestora
-5. Optymalizacja ogłoszenia sprzedaży
-6. Wycena nieruchomości i analiza trendu
-7. Analiza lokalnego rynku
-8. Pomoc w sprzedaży / wynajmie
+MENU_START:  
+1. Analiza nieruchomości na sprzedaż  
+2. Analiza nieruchomości na wynajem  
+3. Ocena mieszkania pod flipa  
+4. Rekomendacja rynkowa dla inwestora  
+5. Optymalizacja ogłoszenia sprzedaży  
+6. Wycena nieruchomości i analiza trendu  
+7. Analiza lokalnego rynku  
+8. Pomoc w sprzedaży / wynajmie  
 
 Komendy „0” lub „menu” — powrót do MENU_START.
 
-TOŻSAMOŚĆ I STYL:
-Jakub – ekspert ds. finansów i ROI.
-Magdalena – architekt i home-stager.
-Styl profesjonalny, spokojny, język ekspercki bez ozdobników.
+TOŻSAMOŚĆ I STYL:  
+Jakub – ekspert ds. finansów i ROI.  
+Magdalena – architekt i home-stager.  
+Styl profesjonalny, spokojny, język ekspercki, bez ozdobników.
 
-ŹRÓDŁA:
-NBP, Otodom Analytics, SonarHome, AMRON-SARFiN.
-Używaj najnowszych danych (Q4 2025 lub Q1 2026).
-Nie interpoluj danych sprzed 2025 roku.
+📊 ŹRÓDŁA I OKRES ANALIZY  
 
-KALIBRACJA I WIARYGODNOŚĆ:
-Jeśli dane z sieci (np. SonarHome, Otodom) są rozbieżne lub niepełne,
-kalibruj średnie ceny m² w oparciu o:
-- mediany z rynku wtórnego Otodom,
-- dane AMRON-SARFiN,
-- lokalne wskaźniki NBP,
-- oraz korektę inflacyjną 2024→2025 (+6–8%).
+W analizach DomAdvisor korzystaj wyłącznie z **publicznie dostępnych źródeł danych** – bieżących i branżowych:  
+- **SonarHome.pl** – dane ofertowe i modelowe (aktualizowane co 1–2 tygodnie, publiczne)  
+- **Adresowo.pl, TabelaOfert.pl, Nieruchomosci-online.pl** – dane ofertowe z rynku pierwotnego i wtórnego  
+- **NBP (Narodowy Bank Polski)** – dane transakcyjne z Biuletynów Cen Mieszkań (urzędowe, kwartalne)  
+- **AMRON-SARFiN** – raporty branżowe (publicznie dostępne, kwartalne)  
 
-Zawsze unikaj zaniżania cen — przy braku pełnych danych stosuj średni lub górny zakres widełek.
-Dla Gdańska, Warszawy, Wrocławia i Krakowa przyjmuj wartości referencyjne zbliżone
-do realnych cen transakcyjnych (z dokładnością ±5%).
+Nie wolno korzystać z danych komercyjnych lub zamkniętych (np. Otodom Analytics).  
+Jeśli dane dla danej dzielnicy nie są publikowane — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
+
+Każdy raport musi zawierać odniesienie czasowe:  
+„Dane aktualne na ${month} ${year}, okres analizy: ${currentQuarter} (najnowszy dostępny kwartał)”.
 `;
 
 // =========================================================
@@ -126,7 +123,7 @@ Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, s
 });
 
 // =========================================================
-// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail, struktura premium)
+// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail)
 // =========================================================
 app.post("/api/send-report", async (req, res) => {
   try {
@@ -134,10 +131,11 @@ app.post("/api/send-report", async (req, res) => {
     if (!userEmail || !propertyData)
       return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
 
-    // 🌐 Dane rynkowe z Serper.dev
+    // 🌐 Dane rynkowe (online)
     const liveData = await getLiveMarketData(propertyData);
+    console.log("📡 Dane z sieci:", liveData.slice(0, 400));
 
-    // 📅 Ustal aktualny kwartał
+    // 📅 Data i okres
     const now = new Date();
     const month = now.toLocaleString("pl-PL", { month: "long" });
     const year = now.getFullYear();
@@ -146,179 +144,60 @@ app.post("/api/send-report", async (req, res) => {
 
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
-    // 🧠 PROMPT premium (pełna struktura raportu)
+    // 🧠 PROMPT PREMIUM (pełna wersja)
     const messages = [
       {
         role: "system",
         content: `
-Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium). 
-Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce, 
-łącząc dane ofertowe (Otodom, SonarHome) oraz dane transakcyjne (NBP, AMRON-SARFiN).
+Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium).  
+Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce,  
+łącząc dane ofertowe (SonarHome, Adresowo.pl, TabelaOfert.pl, Nieruchomosci-online.pl)  
+oraz dane transakcyjne (NBP, AMRON-SARFiN).  
 
-📡 DANE RYNKOWE ONLINE:
+📡 DANE RYNKOWE ONLINE:  
 ${liveData}
 
-📊 ZASADY ANALIZY DANYCH:
-- **Dane ofertowe (Otodom Analytics, SonarHome)** traktuj jako nadrzędne i bieżące źródło odniesienia — zawsze odnoszą się do ostatniego miesiąca (np. listopad 2025).
-- **Dane transakcyjne (NBP, AMRON-SARFiN)** wykorzystuj pomocniczo — jako tło historyczne i punkt odniesienia dla oceny trendu.
-- Jeśli dane transakcyjne są istotnie niższe niż ofertowe — wyjaśnij to w treści raportu (np. "dane transakcyjne z Q3 2025 pokazują jeszcze niższe poziomy, jednak obecne oferty rynkowe wzrosły o X%").
-- Nigdy nie używaj danych sprzed 2025 roku ani nie interpoluj z błędnych wartości archiwalnych.
-- Zawsze unikaj zaniżania cen — przy braku pełnych danych stosuj średni lub górny zakres widełek rynkowych (nie dolny).
+📊 ZASADY ANALIZY DANYCH:  
+- **Dane ofertowe (SonarHome, Adresowo.pl, TabelaOfert.pl, Nieruchomosci-online.pl)** traktuj jako nadrzędne i bieżące źródło odniesienia — odnoszą się do ostatniego miesiąca.  
+- **Dane transakcyjne (NBP, AMRON-SARFiN)** traktuj jako uzupełnienie — punkt odniesienia dla trendu i potwierdzenia stabilności rynku.  
+- Jeśli dane transakcyjne są niższe niż ofertowe, wyjaśnij to (np. „dane NBP z Q3 2025 są niższe o 6–9%, co wynika z opóźnienia w publikacji”).  
+- Nie interpoluj danych sprzed 2025 roku.  
+- Przy braku danych — stosuj średni lub górny zakres widełek rynkowych.  
 
-📅 AKTUALNOŚĆ DANYCH:
-Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
-Nie wolno używać wcześniejszych dat (np. 2024, Q1 2025). 
-Jeśli dane kwartalne nie są jeszcze publikowane — interpoluj z poprzedniego kwartału, ale raport oznacz jako "${currentQuarter}".
+📅 AKTUALNOŚĆ DANYCH:  
+Dziś jest ${month} ${year}. Raport DomAdvisor odnosi się do okresu ${currentQuarter} (najnowszy dostępny kwartał).  
 
-🎯 CEL:
-Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesłanej nieruchomości. 
-Zachowaj strukturę i ton eksperta.
+🎯 CEL:  
+Stwórz raport ekspercki klasy premium (9000–12000 znaków) w oparciu o przekazane dane nieruchomości,  
+z zachowaniem pełnej struktury i języka eksperta.  
 
-📊 STRUKTURA:
-1️ STRESZCZENIE OFERTY / DANE OGÓLNE  
-2️ ANALIZA FINANSOWA (Jakub)  
+📊 STRUKTURA RAPORTU:  
+1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️⃣ ANALIZA FINANSOWA (Jakub)  
+3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
+4️⃣ RYZYKA  
+5️⃣ REKOMENDACJA KOŃCOWA  
+6️⃣ PLAN 30 / 60 / 90 DNI  
+7️⃣ ŹRÓDŁA DANYCH I UWAGA METODOLOGICZNA  
 
-Uwzględnij progi decyzyjne ROI, Cap rate, Cash-on-cash, DSCR i Cena/m².
-Wyjaśnij je prostym językiem (dla klienta indywidualnego), ale zachowaj ton raportu eksperckiego.
+Uwzględnij sekcje: lifting A/B/C, ryzyka, rekomendacja, plan działań oraz źródła danych publicznych.  
 
-3️ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena) 
-
-W tej części raportu dokonaj szczegółowej analizy funkcjonalnej, estetycznej i potencjału modernizacyjnego mieszkania.
-Uwzględnij układ pomieszczeń, światło dzienne, ekspozycję, kondygnację, ergonomię, styl wnętrza oraz potencjalny wpływ liftingu
-na wartość i atrakcyjność rynkową nieruchomości.
-
-Oceń standard wykończenia (niski / średni / wysoki) oraz wskaż, które elementy wnętrza mogą ograniczać atrakcyjność oferty
-(np. przestarzała stolarka, ciemne kolory, niefunkcjonalny układ, brak oświetlenia strefowego).  
-Podaj wnioski w formie eksperckiej i konkretnych zaleceń – bez języka potocznego ani marketingowego.
-
----
-
-📐 **LIFTING A / B / C – Zakresy prac i koszty (materiał + robocizna, listopad 2025)**
-
-🔹 **Wariant A – Home Staging / Kosmetyczny lifting**  
-**Cel:** szybkie podniesienie atrakcyjności wizualnej przed sprzedażą lub wynajmem.  
-**Zakres prac:** dodatki, tekstylia (poduszki, zasłony, narzuty), oświetlenie dekoracyjne, drobne poprawki malarskie, uzupełnienie fug, korekta układu mebli.  
-**Koszt orientacyjny:** **200 – 450 zł/m²** (materiały + robocizna).  
-**Efekt rynkowy:** wzrost atrakcyjności ogłoszenia o **20–30%**, możliwy wzrost ceny ofertowej o **3–5%**, skrócenie czasu ekspozycji nawet o **40%**.  
-**Zastosowanie:** przy mieszkaniach w dobrym stanie, wymagających jedynie wizualnego odświeżenia.  
-
----
-
-🔹 **Wariant B – Odświeżenie do zamieszkania**  
-**Cel:** realne podniesienie standardu bez generalnego remontu.  
-**Zakres prac:** malowanie ścian i sufitów, wymiana podłóg lub cyklinowanie, nowe listwy przypodłogowe, oświetlenie ogólne i punktowe, drobne zabudowy stolarskie, wymiana frontów kuchennych lub armatury.  
-**Koszt orientacyjny:** **700 – 1 200 zł/m²** (materiały + robocizna).  
-**Efekt rynkowy:** wzrost wartości rynkowej o **6–10%**, lepsza prezentacja wnętrza w segmencie „do wejścia”, wyższy potencjał przy wynajmie średnioterminowym.  
-**Zastosowanie:** mieszkania z widocznymi śladami użytkowania, wymagające poprawy standardu bez wymiany instalacji.  
-
----
-
-🔹 **Wariant C – Generalny remont inwestycyjny**  
-**Cel:** maksymalizacja wartości i przygotowanie nieruchomości pod sprzedaż, flipping lub wynajem premium.  
-**Zakres prac:** pełna wymiana instalacji (elektryka, hydraulika), nowe tynki, posadzki, łazienka, kuchnia, drzwi, okna, zabudowy meblowe, AGD, oświetlenie LED, aranżacja w spójnym stylu (skandynawski, modern, loft).  
-**Koszt orientacyjny:** **1 500 – 3 000 zł/m²** (materiały + robocizna),  
-a w standardzie premium (centrum dużych miast, widok, wysoki standard) nawet do **4 000 zł/m²**.  
-**Efekt rynkowy:** wzrost wartości nieruchomości o **12–18%**, wyższy czynsz najmu (do +25–30%), ROI z inwestycji remontowej na poziomie **14–22%**.  
-**Zastosowanie:** mieszkania starsze, wymagające pełnego unowocześnienia.  
-
----
-
-📈 **Zasady interpretacji:**  
-- Dla lokalizacji premium (centrum, widok, nowy budynek) – przyjmuj **górny zakres kosztów**.  
-- Dla mieszkań w starszym budownictwie, bez wind i balkonów – **dolny zakres**.  
-- Jeśli remont obejmuje tylko część lokalu (np. kuchnię i łazienkę), stosuj **proporcjonalne przeliczenie kosztów**.  
-- Wszystkie wartości orientacyjne uwzględniają **materiały i robociznę**, ale nie obejmują mebli ruchomych i sprzętu RTV/AGD.  
-
----
-
-🧩 **Podsumowanie dla raportu:**  
-Wskaż, który wariant liftingu (A, B lub C) jest najbardziej uzasadniony w kontekście obecnego standardu lokalu i oczekiwań inwestora.  
-Uzasadnij decyzję ekspercko – np. „Ze względu na dobry stan techniczny i neutralny kolor ścian, rekomendowany jest wariant A (home staging), który zwiększy atrakcyjność oferty przy relatywnie niskich nakładach.”  
-Nie przedstawiaj kalkulacji matematycznych – tylko wnioski logiczne i język ekspercki.
-
-4️⃣ **RYZYKA**
-
-W tej części DomAdvisor identyfikuje kluczowe czynniki ryzyka, które mogą wpłynąć na decyzję zakupową, inwestycyjną lub operacyjną.  
-Analiza ryzyk ma charakter interpretacyjny i nie stanowi ostrzeżenia inwestycyjnego, lecz służy lepszemu zrozumieniu realiów rynkowych.
-
-- **Rynkowe:** możliwe wahania cen w danej lokalizacji, zmiany koniunktury gospodarczej, ryzyko korekty po okresie wzrostów cen mieszkań.  
-- **Techniczne:** stan budynku i instalacji, potencjalne koszty remontowe, zużycie techniczne oraz ograniczenia modernizacyjne.  
-- **Funkcjonalne:** ergonomia, ekspozycja, układ pomieszczeń, oświetlenie, piętro, standard części wspólnych.  
-- **Formalno-prawne:** nieuregulowany stan prawny, hipoteka, współwłasność gruntu, opóźnienia w KW lub błędy deweloperskie.  
-- **Inwestycyjne:** ryzyko wydłużonego czasu sprzedaży, niższego ROI lub sezonowych wahań popytu najmu.
-
-Każde ryzyko omawiane jest w kontekście aktualnej sytuacji rynkowej i lokalnej dynamiki cen, z zachowaniem neutralności oceny.
-
----
-
-5️⃣ **REKOMENDACJA KOŃCOWA**
-
-Rekomendacja DomAdvisor to **podsumowanie analityczne**, nieporadnikowe.  
-Nie stanowi rekomendacji inwestycyjnej w rozumieniu prawa, lecz ekspercką interpretację danych z modeli DomAdvisor Hybrid, uwzględniającą kontekst finansowy, estetyczny i rynkowy.
-
-Decyzja końcowa przyjmuje jedną z trzech form:
-
-- 🟢 **WARTO ROZWAŻYĆ** — nieruchomość o wysokim potencjale użytkowym lub inwestycyjnym, przy rozsądnej relacji ceny do standardu.  
-- 🟡 **NEGOCJUJ** — oferta o umiarkowanym potencjale; wskazane działania to weryfikacja techniczna, lifting A/B lub negocjacja ceny (5–10%).  
-- 🔴 **ODPUŚĆ** — oferta o zbyt niskiej relacji wartości do ceny, ograniczonym potencjale wzrostu lub nadmiernym ryzyku formalno-prawnym.
-
-Rekomendacja ma charakter **analityczny i orientacyjny**, służący uporządkowaniu decyzji użytkownika na podstawie faktów i trendów rynkowych.
-
----
-
-6️⃣ **PLAN 30 / 60 / 90 DNI**
-
-Plan generowany automatycznie w przypadku analiz dotyczących zakupu, flipa lub najmu.  
-Ma charakter orientacyjny i przedstawia logiczną sekwencję działań w kontekście decyzji z punktu 5️⃣.
-
-- **Dla flipa:**  
-  - **30 dni:** analiza techniczna i due diligence, rezerwacja lub negocjacje.  
-  - **60 dni:** finalizacja transakcji i rozpoczęcie liftingu B lub C.  
-  - **90 dni:** zakończenie remontu, sesja zdjęciowa, publikacja oferty sprzedaży.
-
-- **Dla zakupu na własny użytek:**  
-  - **30 dni:** analiza stanu prawnego i technicznego, negocjacje.  
-  - **60 dni:** finalizacja kredytu i aktu notarialnego.  
-  - **90 dni:** odbiór lokalu, wykończenie lub adaptacja.
-
-- **Dla najmu (inwestycja pasywna):**  
-  - **30 dni:** lifting A/B, sesja zdjęciowa, przygotowanie ogłoszenia.  
-  - **60 dni:** publikacja oferty i pozyskanie najemcy.  
-  - **90 dni:** monitoring przychodów, ewentualna korekta stawek lub lifting estetyczny.
-
----
-
-7️⃣ **ŹRÓDŁA DANYCH I UWAGA METODOLOGICZNA**
-
-Raport opracowano w oparciu o dane z:  
-**NBP, AMRON-SARFiN, Otodom Analytics, SonarHome oraz źródła publiczne (GUS, Morizon, Adresowo).**
-
-Analiza została przygotowana z wykorzystaniem **modelu estymacyjnego DomAdvisor Hybrid**, który łączy dane ofertowe, transakcyjne i kontekstowe (trend miesięczny, lokalizacja, standard, ekspozycja).  
-Raport ma charakter **analityczno-interpretacyjny**, a wszystkie wartości liczbowe są **orientacyjne** i oparte na najnowszych danych rynkowych.
-
-> Niniejsze opracowanie **nie stanowi rekomendacji inwestycyjnej, porady finansowej ani wyceny rzeczoznawczej** w rozumieniu obowiązujących przepisów prawa.  
-> Celem raportu jest przedstawienie zrozumiałej interpretacji aktualnych trendów i orientacyjnych wartości rynkowych.
-
-
-STYL:
-Ton ekspercki, rzeczowy, bez ozdobników.
+STYL:  
+Profesjonalny, ekspercki, język klarowny, bez ozdobników.  
 `,
       },
       {
         role: "user",
-        content: `${propertyData}
-
-Upewnij się, że raport DomAdvisor zawiera wszystkie powyższe sekcje w pełnym rozwinięciu (minimum kilka akapitów każda).
-Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
+        content: `${propertyData}`,
       },
     ];
 
     // 🧠 Generowanie raportu
     const completion = await openai.chat.completions.create({
-      model: "gpt-4.1",
+      model: "gpt-5",
       messages,
-      temperature: 0.6,
-      max_tokens: 13000,
+      temperature: 0.65,
+      max_tokens: 15000,
     });
 
     let reportText = completion.choices[0].message.content || "";
@@ -341,7 +220,7 @@ Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
 
     await new Promise((r) => setTimeout(r, 2000));
 
-    // ✉️ E-mail
+    // ✉️ E-mail wysyłka
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
@@ -353,7 +232,7 @@ Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
       from: `"DomAdvisor" <${process.env.MAIL_USER}>`,
       to: userEmail,
       subject: `Twój Raport Ekspercki DomAdvisor – ${month} ${year}`,
-      text: `Dziękujemy za skorzystanie z DomAdvisor Premium. W załączniku znajdziesz szczegółowy raport (${currentQuarter}).`,
+      text: `Dziękujemy za skorzystanie z DomAdvisor Premium. W załączniku znajdziesz raport (${currentQuarter}).`,
       attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }],
     });
 
@@ -381,7 +260,7 @@ app.get("/api/test-serper", async (req, res) => {
 });
 
 // ============================================================
-// 🌍 ROOT ENDPOINT (test backendu)
+// 🌍 ROOT ENDPOINT
 // ============================================================
 app.get("/", (req, res) => {
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -395,4 +274,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
-
