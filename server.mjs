@@ -98,12 +98,11 @@ Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, s
     ];
 
     const completion = await openai.chat.completions.create({
-  model: "gpt-5",
-  messages,
-  temperature: 0.7,
-  max_tokens: 13000,
-});
-
+      model: "gpt-5",
+      messages,
+      temperature: 0.7,
+      max_tokens: 13000,
+    });
 
     const response = completion.choices[0].message.content;
     console.log("✅ Raport czatowy wygenerowany — długość:", response.length);
@@ -117,6 +116,11 @@ Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, s
 // =========================================================
 // 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail)
 // =========================================================
+app.post("/api/send-report", async (req, res) => {
+  try {
+    const { userEmail, propertyData } = req.body;
+    if (!userEmail || !propertyData)
+      return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
 
     // 🌐 Dane rynkowe
     const liveData = await getLiveMarketData(propertyData);
@@ -191,15 +195,12 @@ Każdy raport ma odnosić się do okresu ${currentQuarter}.`,
     if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
     console.log(`📧 Raport wysłany do: ${userEmail}`);
     res.json({ message: "✅ Raport ekspercki został wysłany na Twój e-mail." });
-    } catch (error) {
+  } catch (error) {
     console.error("❌ Błąd wysyłki raportu:", error);
     res.status(500).json({ error: "Nie udało się wygenerować lub wysłać raportu." });
   }
 });
 
-// =========================================================
-// 🧪 TEST ENDPOINT — sprawdzenie połączenia z Serper.dev
-// =========================================================
 // ============================================================
 // 🧪 TEST ENDPOINT — sprawdzenie połączenia z Serper.dev
 // ============================================================
@@ -229,7 +230,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
-
-
-
-
