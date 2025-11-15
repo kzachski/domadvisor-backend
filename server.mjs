@@ -191,7 +191,7 @@ Każdy raport ma odnosić się do okresu ${currentQuarter}.`,
     if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
     console.log(`📧 Raport wysłany do: ${userEmail}`);
     res.json({ message: "✅ Raport ekspercki został wysłany na Twój e-mail." });
-  } catch (error) {
+    } catch (error) {
     console.error("❌ Błąd wysyłki raportu:", error);
     res.status(500).json({ error: "Nie udało się wygenerować lub wysłać raportu." });
   }
@@ -229,6 +229,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
+
 
 
 
