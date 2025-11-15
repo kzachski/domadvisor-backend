@@ -316,7 +316,7 @@ aktualne zakresy cen ofertowych dla wszystkich głównych miast i dzielnic w Pol
   Przykład: „Dane transakcyjne z Q3 2025 pozostają o około 6–9% niższe od aktualnych ofert rynkowych.”  
 
 5️⃣ REFERENCJE LOKALNE
-Dla każdej lokalizacji raport korzysta automatycznie z pliku `/data/baseRegions.json`,
+Dla każdej lokalizacji raport korzysta automatycznie z pliku data/baseRegions.json,
 który zawiera zakresy cen aktualnych na listopad 2025.  
 Jeśli miasto lub dzielnica nie ma przypisanego zakresu, stosowany jest poziom krajowy:
 „Polska: 9 500–12 500 zł/m²”.
@@ -531,6 +531,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
