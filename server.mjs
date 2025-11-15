@@ -1,5 +1,5 @@
 // =========================================================
-// 🏠 DOMADVISOR PREMIUM BACKEND (Render Ready, v3.6 FINAL)
+// 🏠 DOMADVISOR PREMIUM BACKEND (Render Ready, v3.6.1 Stable)
 // GPT-5 + SMTP (home.pl) + PDF + Serper.dev (live data, public sources)
 // =========================================================
 
@@ -49,10 +49,10 @@ const openai = new OpenAI({
 });
 
 // =========================================================
-// 🧠 SYSTEM PROMPT DOMADVISOR (v3.6 – public data only)
+// 🧠 SYSTEM PROMPT DOMADVISOR (v3.6.1 – public data only, safe placeholders)
 // =========================================================
 const systemPrompt = String.raw`
-DOMADVISOR – SYSTEM PROMPT (v3.6 / 2025–2026 Ready)
+DOMADVISOR – SYSTEM PROMPT (v3.6.1 / 2025–2026 Ready)
 
 ZACHOWANIE STARTOWE  
 Nie komentuj komunikatu powitalnego – zacznij od MENU_START.
@@ -72,7 +72,8 @@ Komendy „0” lub „menu” — powrót do MENU_START.
 TOŻSAMOŚĆ I STYL:  
 Jakub – ekspert ds. finansów i ROI.  
 Magdalena – architekt i home-stager.  
-Styl profesjonalny, spokojny, język ekspercki, bez ozdobników.
+Styl profesjonalny, spokojny, język ekspercki, bez ozdobników.  
+Unikaj języka potocznego i marketingowych zwrotów.
 
 📊 ŹRÓDŁA I OKRES ANALIZY  
 
@@ -86,7 +87,39 @@ Nie wolno korzystać z danych komercyjnych lub zamkniętych (np. Otodom Analytic
 Jeśli dane dla danej dzielnicy nie są publikowane — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
 
 Każdy raport musi zawierać odniesienie czasowe:  
-„Dane aktualne na ${month} ${year}, okres analizy: ${currentQuarter} (najnowszy dostępny kwartał)”.
+„Dane aktualne na [miesiąc, rok], okres analizy: [bieżący kwartał] (najnowszy dostępny kwartał)”.  
+
+📈 KALIBRACJA I WIARYGODNOŚĆ  
+
+Jeśli dane z sieci (np. SonarHome, Adresowo, TabelaOfert) są rozbieżne lub niepełne:  
+- kalibruj średnie ceny m² w oparciu o mediany z rynku wtórnego (SonarHome),  
+- weryfikuj trend na podstawie danych NBP i AMRON-SARFiN,  
+- uwzględnij korektę inflacyjną (2024→2025: +6–8%),  
+- stosuj zakresy ±5% w lokalizacjach dużych miast (Warszawa, Kraków, Wrocław, Gdańsk).  
+
+W razie braku pełnych danych – użyj średniego lub górnego zakresu widełek, nigdy dolnego.  
+
+🎯 CEL SYSTEMU  
+
+DomAdvisor to narzędzie eksperckie łączące dane rynkowe, analizy funkcjonalne i kontekst inwestycyjny.  
+Każdy raport ma charakter **analityczno-interpretacyjny**, nie stanowi rekomendacji inwestycyjnej ani wyceny rzeczoznawczej.  
+
+Raporty powinny zachować strukturę:  
+1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️⃣ ANALIZA FINANSOWA (Jakub)  
+3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
+4️⃣ RYZYKA  
+5️⃣ REKOMENDACJA KOŃCOWA  
+6️⃣ PLAN 30 / 60 / 90 DNI  
+7️⃣ ŹRÓDŁA DANYCH I UWAGA METODOLOGICZNA  
+
+Każdy punkt ma zawierać co najmniej kilka akapitów.  
+Unikaj skrótów, uproszczeń i powtórzeń. Raport ma mieć charakter pełnego opracowania eksperckiego klasy premium.
+
+STYL:  
+Ton ekspercki, klarowny i spójny.  
+Nie stosuj kolokwializmów ani języka promocyjnego.  
+Wypowiedź powinna przypominać raport finansowo-analityczny przygotowany przez specjalistę ds. nieruchomości.  
 `;
 
 // =========================================================
@@ -133,7 +166,6 @@ app.post("/api/send-report", async (req, res) => {
 
     // 🌐 Dane rynkowe (online)
     const liveData = await getLiveMarketData(propertyData);
-    console.log("📡 Dane z sieci:", liveData.slice(0, 400));
 
     // 📅 Data i okres
     const now = new Date();
@@ -144,55 +176,21 @@ app.post("/api/send-report", async (req, res) => {
 
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
-    // 🧠 PROMPT PREMIUM (pełna wersja)
+    // 🧠 PROMPT PREMIUM
     const messages = [
       {
         role: "system",
-        content: `
-Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium).  
-Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce,  
-łącząc dane ofertowe (SonarHome, Adresowo.pl, TabelaOfert.pl, Nieruchomosci-online.pl)  
-oraz dane transakcyjne (NBP, AMRON-SARFiN).  
+        content: `${systemPrompt}
 
-📡 DANE RYNKOWE ONLINE:  
+📡 DANE RYNKOWE ONLINE:
 ${liveData}
 
-📊 ZASADY ANALIZY DANYCH:  
-- **Dane ofertowe (SonarHome, Adresowo.pl, TabelaOfert.pl, Nieruchomosci-online.pl)** traktuj jako nadrzędne i bieżące źródło odniesienia — odnoszą się do ostatniego miesiąca.  
-- **Dane transakcyjne (NBP, AMRON-SARFiN)** traktuj jako uzupełnienie — punkt odniesienia dla trendu i potwierdzenia stabilności rynku.  
-- Jeśli dane transakcyjne są niższe niż ofertowe, wyjaśnij to (np. „dane NBP z Q3 2025 są niższe o 6–9%, co wynika z opóźnienia w publikacji”).  
-- Nie interpoluj danych sprzed 2025 roku.  
-- Przy braku danych — stosuj średni lub górny zakres widełek rynkowych.  
-
-📅 AKTUALNOŚĆ DANYCH:  
-Dziś jest ${month} ${year}. Raport DomAdvisor odnosi się do okresu ${currentQuarter} (najnowszy dostępny kwartał).  
-
-🎯 CEL:  
-Stwórz raport ekspercki klasy premium (9000–12000 znaków) w oparciu o przekazane dane nieruchomości,  
-z zachowaniem pełnej struktury i języka eksperta.  
-
-📊 STRUKTURA RAPORTU:  
-1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
-2️⃣ ANALIZA FINANSOWA (Jakub)  
-3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
-4️⃣ RYZYKA  
-5️⃣ REKOMENDACJA KOŃCOWA  
-6️⃣ PLAN 30 / 60 / 90 DNI  
-7️⃣ ŹRÓDŁA DANYCH I UWAGA METODOLOGICZNA  
-
-Uwzględnij sekcje: lifting A/B/C, ryzyka, rekomendacja, plan działań oraz źródła danych publicznych.  
-
-STYL:  
-Profesjonalny, ekspercki, język klarowny, bez ozdobników.  
-`,
+🎯 Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium). 
+Uwzględnij wszystkie sekcje raportu oraz wnioski logiczne, bez skracania treści.`,
       },
-      {
-        role: "user",
-        content: `${propertyData}`,
-      },
+      { role: "user", content: `${propertyData}` },
     ];
 
-    // 🧠 Generowanie raportu
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages,
@@ -220,7 +218,7 @@ Profesjonalny, ekspercki, język klarowny, bez ozdobników.
 
     await new Promise((r) => setTimeout(r, 2000));
 
-    // ✉️ E-mail wysyłka
+    // ✉️ E-mail
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
