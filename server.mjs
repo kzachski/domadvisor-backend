@@ -204,6 +204,9 @@ Każdy raport ma odnosić się do okresu ${currentQuarter}.`,
 // =========================================================
 // 🧪 TEST ENDPOINT — sprawdzenie połączenia z Serper.dev
 // =========================================================
+// ============================================================
+// 🧪 TEST ENDPOINT — sprawdzenie połączenia z Serper.dev
+// ============================================================
 app.get("/api/test-serper", async (req, res) => {
   try {
     const location = "Gdańsk Żabianka";
@@ -215,14 +218,19 @@ app.get("/api/test-serper", async (req, res) => {
   }
 });
 
-// =========================================================
-// 🚀 START SERWERA
-// =========================================================
+// ============================================================
+// 🌍 ROOT ENDPOINT (test backendu)
+// ============================================================
 app.get("/", (req, res) => {
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
   res.send("✅ DomAdvisor backend działa poprawnie. Użyj POST /api/send-report");
 });
 
+// ============================================================
+// 🚀 START SERWERA
+// ============================================================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () =>
-  console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
-);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
+});
+
