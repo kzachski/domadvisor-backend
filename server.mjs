@@ -15,9 +15,9 @@ import fs from "fs";
 import path from "path";
 // 📚 Import danych referencyjnych (wszystkie miasta i dzielnice Polski)
 
-const baseRegions = JSON.parse(
-  fs.readFileSync(path.resolve("./data/baseRegions.json"), "utf-8")
-);
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const baseRegionsPath = path.join(__dirname, "data", "baseRegions.json");
+const baseRegions = JSON.parse(fs.readFileSync(baseRegionsPath, "utf-8"));
 
 // 🔍 Funkcja automatycznego rozpoznania lokalizacji
 function detectLocation(propertyText = "") {
@@ -531,6 +531,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
+
 
 
 
