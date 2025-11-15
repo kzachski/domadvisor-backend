@@ -7,71 +7,11 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import OpenAI from "openai";
-import { estimatePriceRange } from "./utils/domAdvisorModel.js";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
-// 📚 Import danych referencyjnych (wszystkie miasta i dzielnice Polski)
-
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const baseRegionsPath = path.join(__dirname, "data", "baseRegions.json");
-const baseRegions = JSON.parse(fs.readFileSync(baseRegionsPath, "utf-8"));
-
-// 🔍 Funkcja automatycznego rozpoznania lokalizacji
-function detectLocation(propertyText = "") {
-  propertyText = propertyText.toLowerCase();
-  let detectedCity = "Polska";
-  let detectedDistrict = null;
-
-  // Szukamy miasta
-  for (const city of Object.keys(baseRegions)) {
-    if (propertyText.includes(city.toLowerCase())) {
-      detectedCity = city;
-      break;
-    }
-  }
-
-  // Szukamy dzielnicy (jeśli w danym mieście są dzielnice)
-  if (baseRegions[detectedCity]) {
-    for (const district of Object.keys(baseRegions[detectedCity])) {
-      if (propertyText.includes(district.toLowerCase())) {
-        detectedDistrict = district;
-        break;
-      }
-    }
-  }
-
-  return { detectedCity, detectedDistrict };
-}
-
-// 📈 Funkcja pobierająca dane z pliku baseRegions.json
-function getRegionalRange(city, district) {
-  const fallback = baseRegions["Polska"];
-  if (baseRegions[city]) {
-    if (district && baseRegions[city][district]) {
-      return baseRegions[city][district];
-    } else {
-      // jeśli brak dzielnicy → średnia dla miasta
-      const avgCity = Object.values(baseRegions[city]).reduce(
-        (acc, v) => {
-          acc.min += v.min;
-          acc.max += v.max;
-          return acc;
-        },
-        { min: 0, max: 0 }
-      );
-      const count = Object.keys(baseRegions[city]).length;
-      return {
-        min: Math.round(avgCity.min / count),
-        max: Math.round(avgCity.max / count),
-      };
-    }
-  }
-  return fallback; // jeśli miasto nieznane → średnia krajowa
-}
-
 
 // 🔐 Załaduj zmienne środowiskowe (.env lokalnie lub Render Environment)
 dotenv.config();
@@ -144,8 +84,14 @@ nazwisko → tylko inicjał.
 
 ŹRÓDŁA I OKRES ANALIZY
 Zawsze korzystaj z najnowszych dostępnych danych:
-- **Dane ofertowe (Otodom Analytics, SonarHome)** traktuj jako nadrzędne i bieżące źródło odniesienia — zawsze odnoszą się do ostatniego miesiąca (np. listopad 2025).
-- **Dane transakcyjne (NBP, AMRON-SARFiN)** wykorzystuj pomocniczo — jako tło historyczne i punkt odniesienia dla oceny trendu
+
+- NBP – Biuletyny cen transakcyjnych (ostatni pełny kwartał)  
+- Otodom Analytics – dane ofertowe i transakcyjne (ostatni miesiąc lub kwartał)  
+- AMRON-SARFiN – raporty kwartalne  
+- Dane lokalne – Poznań, Warszawa, Kraków, Wrocław, Trójmiasto, Łódź, Katowice, Szczecin  
+
+Jeśli dane nie są dostępne — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
+W każdym raporcie podaj okres odniesienia (np. Q4 2025 lub Q1 2026 – najnowszy dostępny).
 
 ---`;
 
@@ -188,54 +134,6 @@ Tryb: DomAdvisor Premium — generuj raport ekspercki (ok. 1000–1500 słów, s
 app.post("/api/send-report", async (req, res) => {
   try {
     const { userEmail, propertyData } = req.body;
-    // 📍 Wykrywanie miasta, dzielnicy i standardu (analogicznie jak w czacie)
-// 🧭 Automatyczne rozpoznanie miasta i dzielnicy
-let { detectedCity, detectedDistrict } = detectLocation(propertyData);
-
-// 🏗️ Automatyczne pobranie widełek z pliku baseRegions.json
-const range = getRegionalRange(detectedCity, detectedDistrict);
-
-let standard = "średni";
-
-if (propertyData.includes("Warszawa")) detectedCity = "Warszawa";
-else if (propertyData.includes("Kraków")) detectedCity = "Kraków";
-else if (propertyData.includes("Gdańsk")) detectedCity = "Gdańsk";
-else if (propertyData.includes("Wrocław")) detectedCity = "Wrocław";
-else if (propertyData.includes("Poznań")) detectedCity = "Poznań";
-
-if (propertyData.includes("Żabianka")) detectedDistrict = "Żabianka";
-else if (propertyData.includes("Oliwa")) detectedDistrict = "Oliwa";
-else if (propertyData.includes("Wrzeszcz")) detectedDistrict = "Wrzeszcz";
-else if (propertyData.includes("Przymorze")) detectedDistrict = "Przymorze";
-else if (propertyData.includes("Śródmieście")) detectedDistrict = "Śródmieście";
-
-if (propertyData.includes("po remoncie") || propertyData.includes("wysoki standard")) standard = "wysoki";
-else if (propertyData.includes("do remontu") || propertyData.includes("niski standard")) standard = "niski";
-
-
-    // 📊 Automatyczna estymacja cen lokalnych (DomAdvisor Model)
-
-// Prosta analiza tekstu wejściowego, aby wykryć miasto i dzielnicę
-if (propertyData.includes("Warszawa")) detectedCity = "Warszawa";
-if (propertyData.includes("Kraków")) detectedCity = "Kraków";
-if (propertyData.includes("Wrocław")) detectedCity = "Wrocław";
-if (propertyData.includes("Poznań")) detectedCity = "Poznań";
-if (propertyData.includes("Gdańsk")) detectedCity = "Gdańsk";
-
-if (propertyData.includes("Przymorze")) detectedDistrict = "Przymorze";
-if (propertyData.includes("Wrzeszcz")) detectedDistrict = "Wrzeszcz";
-if (propertyData.includes("Oliwa")) detectedDistrict = "Oliwa";
-if (propertyData.includes("Żabianka")) detectedDistrict = "Żabianka";
-if (propertyData.includes("Śródmieście")) detectedDistrict = "Śródmieście";
-
-if (propertyData.includes("wysoki standard") || propertyData.includes("po remoncie"))
-  standard = "wysoki";
-else if (propertyData.includes("do remontu") || propertyData.includes("niski standard"))
-  standard = "niski";
-
-const estimated = estimatePriceRange(detectedCity, detectedDistrict, standard);
-console.log(`📈 Estymacja DomAdvisor Model (${detectedCity}/${detectedDistrict}, ${standard}):`, estimated);
-
     if (!userEmail || !propertyData)
       return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
 
@@ -249,199 +147,61 @@ console.log(`📈 Estymacja DomAdvisor Model (${detectedCity}/${detectedDistrict
     console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
     // 🧠 Generowanie pełnego raportu eksperckiego z (systemPrompt)
-    // 📊 Integracja modelu DomAdvisor z promptem raportu
-const priceSummary = `Dla lokalizacji ${detectedCity} / ${detectedDistrict} (standard: ${standard}), 
-wewnętrzny model DomAdvisor oszacował bieżący zakres cen ofertowych w przedziale 
-${estimated.min.toLocaleString("pl-PL")} – ${estimated.max.toLocaleString("pl-PL")} zł/m² 
-(średnia: ${estimated.avg.toLocaleString("pl-PL")} zł/m²). 
-Dane stanowią tło analityczne dla sekcji „Analiza finansowa”.`;
-    // 📈 Automatyczna interpretacja wyników DomAdvisor Model
-let interpretation = "";
-
-const avgValue = estimated.avg;
-const diffFromMin = ((propertyData.includes("cena") ? parseFloat(propertyData.match(/\d{5,7}/)?.[0]) : avgValue) - estimated.min) / estimated.min * 100;
-const diffFromAvg = diffFromMin > 0 ? "powyżej" : "poniżej";
-
-if (avgValue && diffFromMin < -5) {
-  interpretation = `Z analizy modelu DomAdvisor wynika, że cena tej nieruchomości znajduje się wyraźnie poniżej rynkowych widełek ofertowych dla ${detectedDistrict}. Może to wskazywać na atrakcyjność inwestycyjną lub konieczność modernizacji.`;
-} else if (diffFromMin >= -5 && diffFromMin <= 5) {
-  interpretation = `Cena ofertowa analizowanej nieruchomości mieści się w zakresie średnich wartości rynkowych dla lokalizacji ${detectedDistrict}. Oznacza to, że wycena jest zbliżona do przeciętnego poziomu rynkowego.`;
-} else {
-  interpretation = `Cena nieruchomości plasuje się powyżej średnich widełek ofertowych (${diffFromMin.toFixed(1)}% ${diffFromAvg} średniej), co może wynikać z podwyższonego standardu wykończenia, atrakcyjnego piętra lub widoku.`;
-}
-
-// Dodanie interpretacji do promptu
-const valuationInsight = `
-${priceSummary}
-
-${interpretation}
-`;
    const messages = [
- {
-  role: "system",
-  content: `
+  {
+    role: "system",
+    content: `
 Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium). 
 Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce, 
-oparty o dane ofertowe i transakcyjne, z zachowaniem priorytetów i aktualności rynkowej.
+łącząc dane ofertowe (Otodom, SonarHome) oraz dane transakcyjne (NBP, AMRON-SARFiN).
+> 📡 PRZED ROZPOCZĘCIEM ANALIZY:
+> Wykonaj krótkie wyszukiwanie w internecie, aby sprawdzić **aktualne dane ofertowe (listopad 2025)** dotyczące średnich cen m² w danej lokalizacji.
+>
+> Skup się na źródłach takich jak:
+> - SonarHome (https://sonarhome.pl)
+> - Otodom Analytics
+> - Adresowo.pl
+> - Nieruchomosci-online.pl
+>
+> Jeśli lokalizacja jest szczegółowa (np. Gdańsk-Żabianka, Warszawa-Mokotów) – pobierz dane właśnie dla tej dzielnicy.
+>
+> W raporcie nie pokazuj źródeł ani linków – wpleć dane opisowo, np.:
+>
+> „Według danych SonarHome i Otodom Analytics (listopad 2025), średnia cena ofertowa w Gdańsku-Żabiance wynosi ok. **14 500 zł/m²**, a typowy zakres rynkowy mieści się między **13 900 a 15 700 zł/m²**.”
+>
+> Jeśli dane z różnych źródeł różnią się o więcej niż 10 %, zastosuj uśrednienie.
+>
+> Te dane traktuj jako **referencyjne** dla całego raportu DomAdvisor – nie obliczaj ich ręcznie, tylko pobierz automatycznie z najnowszych wyników wyszukiwania.
+
 
 📊 ZASADY ANALIZY DANYCH:
-📈 ALGORYTM DOMADVISOR MODEL (wersja krajowa, działa w tle – bez ujawniania obliczeń)
-
-Model DomAdvisor Model łączy dane z głównych źródeł rynkowych i automatycznie oblicza średnie ceny ofertowe 
-dla każdej lokalizacji w Polsce. Działa w tle — raport pokazuje jedynie gotowe wyniki i interpretacje, 
-bez ujawniania formuł ani obliczeń pośrednich.
-
-1️⃣ ŹRÓDŁA I WAGI WEWNĘTRZNE (model krajowy)
-- Otodom / Morizon – dane ofertowe bieżące: waga 0.45  
-- SonarHome – dane modelowe, uśrednione: waga 0.35  
-- Adresowo / portale lokalne – dane uzupełniające: waga 0.15  
-- NBP / AMRON-SARFiN – dane transakcyjne kwartalne (tło): waga 0.05  
-
-2️⃣ DZIAŁANIE (W TLE)
-- Model automatycznie pobiera dane z pliku referencyjnego (baseRegions.json), który zawiera 
-aktualne zakresy cen ofertowych dla wszystkich głównych miast i dzielnic w Polsce.  
-- W przypadku braku danych szczegółowych dla danej lokalizacji, stosowany jest zakres wojewódzki lub krajowy.  
-- Obliczenia wykonuje się wewnętrznie, a raport przedstawia wyłącznie logiczne wnioski, np.:  
-  „Ceny ofertowe w tej części Warszawy kształtują się w przedziale 16 000–18 500 zł/m²,
-   co oznacza wzrost o około 2% względem poprzedniego kwartału.”
-
-3️⃣ KOREKTY KONTEKSTOWE (działają automatycznie)
-- Trend miesięczny: +0.8–1.2% / miesiąc  
-- Standard techniczny: ±3–10%  
-- Ekspozycja, piętro, widok, układ: ±2–5%
-
-4️⃣ BEZPIECZEŃSTWO INTERPRETACJI
-- W raporcie nigdy nie ujawniaj obliczeń matematycznych ani wag źródeł.  
-- Jeśli dane transakcyjne (NBP/AMRON) są niższe — przedstaw różnicę jako efekt opóźnienia publikacji kwartalnych.  
-  Przykład: „Dane transakcyjne z Q3 2025 pozostają o około 6–9% niższe od aktualnych ofert rynkowych.”  
-
-5️⃣ REFERENCJE LOKALNE
-Dla każdej lokalizacji raport korzysta automatycznie z pliku data/baseRegions.json,
-który zawiera zakresy cen aktualnych na listopad 2025.  
-Jeśli miasto lub dzielnica nie ma przypisanego zakresu, stosowany jest poziom krajowy:
-„Polska: 9 500–12 500 zł/m²”.
-
-6️⃣ METODOLOGIA (sekcja końcowa raportu)
-Na końcu raportu umieść krótki opis:
-„Raport opracowano w oparciu o autorski **DomAdvisor Model**, 
-łączący dane ofertowe i transakcyjne (Otodom, SonarHome, Morizon, NBP, AMRON-SARFiN) 
-z wagami i korektami kontekstowymi. Model działa w tle i prezentuje wyłącznie wyniki końcowe analizy,
-bez obliczeń matematycznych.”
-
-
-
-📅 AKTUALNOŚĆ DANYCH:
+- **Dane ofertowe (Otodom Analytics, SonarHome)** traktuj jako nadrzędne i bieżące źródło odniesienia — zawsze odnoszą się do ostatniego miesiąca (np. listopad 2025).
+- **Dane transakcyjne (NBP, AMRON-SARFiN)** wykorzystuj pomocniczo — jako tło historyczne i punkt odniesienia dla oceny trendu.
+- Jeśli dane transakcyjne są istotnie niższe niż ofertowe — wyjaśnij to w treści raportu (np. "dane transakcyjne z Q3 2025 pokazują jeszcze niższe poziomy, jednak obecne oferty rynkowe wzrosły o X%").
+- Nigdy nie używaj danych sprzed 2025 roku ani nie interpoluj z błędnych wartości archiwalnych.
+📅 AKTUALNOŚĆ DANYCH
 Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
 Nie wolno używać wcześniejszych dat (np. 2024, Q1 2025). 
 Jeśli dane kwartalne nie są jeszcze publikowane — interpoluj z poprzedniego kwartału, ale raport oznacz jako "${currentQuarter}".
 
-🎯 CEL:
+🎯 CEL
 Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesłanej nieruchomości. 
-Zachowaj strukturę, ton i narrację eksperta DomAdvisor.
+Zachowaj strukturę i ton eksperta.
 
-📊 STRUKTURA:
-1️. STRESZCZENIE OFERTY / DANE OGÓLNE  
-2️. ANALIZA FINANSOWA (Jakub)  
-3️. ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
-4️. RYZYKA  
-5️. REKOMENDACJA KOŃCOWA  
-6️. PLAN 30 / 60 / 90 DNI  
-7️. ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
+📊 STRUKTURA
+1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️⃣ ANALIZA FINANSOWA (Jakub)  
+3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
+4️⃣ RYZYKA  
+5️⃣ REKOMENDACJA KOŃCOWA  
+6️⃣ PLAN 30 / 60 / 90 DNI  
+7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
 
-6. PLAN 30 / 60 / 90 DNI  
-Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)  
-
-Plan 30 / 60 / 90 dni generowany jest automatycznie w sekcji „Rekomendacja końcowa”,  
-jeśli analiza dotyczy zakupu, inwestycji typu flip lub najmu.  
-Ma charakter orientacyjny i służy uporządkowaniu etapów procesu decyzyjnego.  
-Nie stanowi rekomendacji inwestycyjnej w rozumieniu polskiego prawa.  
-
----
-
-**Dla inwestycji typu Flip:**  
-- **30 dni** – negocjacje ceny, due diligence techniczne, weryfikacja stanu prawnego, rezerwacja lokalu.  
-- **60 dni** – finalizacja zakupu, podpisanie aktu notarialnego, rozpoczęcie remontu lub liftingu.  
-- **90 dni** – zakończenie prac, przygotowanie sesji zdjęciowej i publikacja ogłoszenia sprzedaży.  
-
-**Dla zakupu na własne potrzeby:**  
-- **30 dni** – analiza techniczna i estetyczna, weryfikacja formalna nieruchomości, negocjacje ceny.  
-- **60 dni** – finalizacja transakcji i finansowania (kredyt, akt notarialny).  
-- **90 dni** – odbiór lokalu, ewentualne wykończenie lub decyzja o wynajmie.  
-
-**Dla najmu (inwestycja pasywna lub krótkoterminowa):**  
-- **30 dni** – lifting A/B (odświeżenie lub częściowa modernizacja), przygotowanie dokumentacji fotograficznej.  
-- **60 dni** – publikacja oferty i rozpoczęcie najmu.  
-- **90 dni** – monitoring efektów najmu, analiza przychodów i ewentualna korekta stawek.  
-
----
-
-**PROGI DECYZYJNE (dla analizy ekonomicznej, nie jako rekomendacja):**  
-- **Flip:** ROI netto ≥ 12%  
-- **Najem:** cap rate ≥ 5,5%, cash-on-cash ≥ 8%, DSCR ≥ 1,25  
-- **Zakup:** cena/m² ≤ średnia rynkowa +10% (z wyjątkiem lokalizacji premium)  
-
----
-
-Plan DomAdvisor ma charakter orientacyjny i służy użytkownikowi do oceny racjonalności i etapów inwestycji.  
-Każdy przypadek wymaga indywidualnej weryfikacji technicznej i finansowej.
-// 🏗️ MODUŁ LIFTINGU / ADAPTACJI (sekcja 3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA)
-Uwzględnij trzy warianty liftingu lub adaptacji mieszkania z realistycznymi kosztami (materiały + robocizna) oraz zróżnicowanym potencjałem wpływu na wartość nieruchomości. 
-Nie pokazuj wyliczeń kosztów jednostkowych — prezentuj tylko przedziały i interpretację efektu ekonomicznego. 
-Uwzględnij, że wzrost wartości nie jest gwarantowany i zależy od ceny zakupu, lokalizacji oraz jakości wykonania.
-
-// 🧱 SEKCJA: LIFTINGI A/B/C – MODEL DOMADVISOR (v2.0)
-📐 LIFTINGI I MODERNIZACJE (A/B/C)
-
-DomAdvisor generuje trzy warianty liftingów wykończeniowych w zależności od celu (flip, najem, zamieszkanie).  
-Warianty obliczane są w tle na podstawie średnich kosztów rynkowych w Polsce (Q4 ${year}) z uwzględnieniem materiałów i robocizny, bez wyposażenia AGD i mebli ruchomych.  
-W raporcie pokazuj **tylko wnioski opisowe i wartości końcowe**, bez ujawniania wzorów czy obliczeń.
-
----
-
-**Wariant A – Home staging / lifting wizualny**  
-Cel: szybka poprawa atrakcyjności oferty sprzedażowej lub wynajmu.  
-Zakres: odświeżenie koloru ścian, oświetlenia, tekstyliów, mebli; zmiana aranżacji bez prac budowlanych.  
-Koszt orientacyjny: **200–350 zł/m²**.  
-Efekt: zwiększenie postrzeganej wartości o 5–10%, skrócenie czasu sprzedaży/najmu o 20–40%.  
-
----
-
-**Wariant B – Odświeżenie przed zamieszkaniem / najmem**  
-Cel: dostosowanie mieszkania do użytkowania własnego lub komercyjnego (najem).  
-Zakres: malowanie, wymiana podłóg i drzwi, modernizacja łazienki lub kuchni bez wymiany instalacji, korekta układu pomieszczeń.  
-Koszt orientacyjny: **900–1 800 zł/m²**.  
-Efekt: podniesienie wartości rynkowej o 8–15%, możliwy wzrost czynszu o 10–20%.  
-
----
-
-**Wariant C – Kompleksowy remont / generalna modernizacja**  
-Cel: pełne odnowienie mieszkania (flip, inwestycja premium, zakup z rynku wtórnego).  
-Zakres: wymiana instalacji, stolarki okiennej, tynków, podłóg, pełne wykończenie kuchni i łazienek, przebudowa układu funkcjonalnego.  
-Koszt orientacyjny: **1 800–4 500 zł/m²** (w lokalizacjach premium nawet powyżej 5 000 zł/m²).  
-Efekt: wzrost wartości rynkowej o 15–25%, skrócenie cyklu zwrotu z inwestycji o 1–2 lata.  
-
----
-
-📊 ZASADY INTERPRETACJI  
-- Nie prezentuj pełnych kalkulacji w raporcie — tylko opis efektów i rekomendacji dla wariantu.  
-- Jeśli użytkownik nie określi celu (flip, zakup, najem), zaprezentuj wszystkie trzy warianty z krótkim porównaniem efektów i kosztów.  
-- W wariancie C zawsze uwzględnij odniesienie do stanu technicznego i realnego potencjału ROI (bez danych wrażliwych).  
-
----
-
-W raporcie należy wskazać:  
-- który wariant liftingu jest najbardziej racjonalny w kontekście stanu i lokalizacji mieszkania,  
-- szacunkowy koszt całkowity remontu (np. łączny koszt × powierzchnia mieszkania),  
-- oraz realistyczny (nie maksymalny) potencjał wzrostu wartości lub ROI.  
-
-Dane mają być prezentowane w formie opisowej (interpretacyjnej), bez tabeli kosztów i bez surowych kalkulacji.  
-Wszystkie kwoty mają charakter orientacyjny i zależą od lokalnych stawek rynkowych (Warszawa, Trójmiasto, reszta Polski).
-
-STYL:
+STYL
 Ton ekspercki, rzeczowy, bez ozdobników.
+Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
 `,
-},
-
+  },
 
       {
         role: "user",
@@ -515,7 +275,6 @@ Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
     res.json({ message: "✅ Raport ekspercki został wysłany na Twój e-mail." });
   } catch (error) {
     console.error("❌ Błąd wysyłki raportu:", error);
-    console.error("📄 Stack trace:", error.stack);
     res.status(500).json({ error: "Nie udało się wygenerować lub wysłać raportu." });
   }
 });
@@ -531,24 +290,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`)
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
