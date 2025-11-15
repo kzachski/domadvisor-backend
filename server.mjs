@@ -126,7 +126,7 @@ Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, s
 });
 
 // =========================================================
-// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail)
+// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail, struktura premium)
 // =========================================================
 app.post("/api/send-report", async (req, res) => {
   try {
@@ -134,33 +134,70 @@ app.post("/api/send-report", async (req, res) => {
     if (!userEmail || !propertyData)
       return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
 
-    // 🌐 Dane rynkowe
+    // 🌐 Dane rynkowe z Serper.dev
     const liveData = await getLiveMarketData(propertyData);
 
-    // 📅 Okres bieżący
+    // 📅 Ustal aktualny kwartał
     const now = new Date();
     const month = now.toLocaleString("pl-PL", { month: "long" });
     const year = now.getFullYear();
     const quarter = Math.ceil((now.getMonth() + 1) / 3);
     const currentQuarter = `Q${quarter} ${year}`;
 
-    // 🧠 GPT prompt
+    console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
+
+    // 🧠 PROMPT premium (pełna struktura raportu)
     const messages = [
       {
         role: "system",
         content: `
-📡 Aktualne dane rynkowe znalezione online:\n${liveData}
+Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium). 
+Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce, 
+łącząc dane ofertowe (Otodom, SonarHome) oraz dane transakcyjne (NBP, AMRON-SARFiN).
 
-${systemPrompt}
+📡 DANE RYNKOWE ONLINE:
+${liveData}
 
-Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium).
-Uwzględnij dane z SonarHome, Otodom, NBP i AMRON-SARFiN.
-Każdy raport ma odnosić się do okresu ${currentQuarter}.`,
+📊 ZASADY ANALIZY DANYCH:
+- **Dane ofertowe (Otodom Analytics, SonarHome)** traktuj jako nadrzędne i bieżące źródło odniesienia — zawsze odnoszą się do ostatniego miesiąca (np. listopad 2025).
+- **Dane transakcyjne (NBP, AMRON-SARFiN)** wykorzystuj pomocniczo — jako tło historyczne i punkt odniesienia dla oceny trendu.
+- Jeśli dane transakcyjne są istotnie niższe niż ofertowe — wyjaśnij to w treści raportu (np. "dane transakcyjne z Q3 2025 pokazują jeszcze niższe poziomy, jednak obecne oferty rynkowe wzrosły o X%").
+- Nigdy nie używaj danych sprzed 2025 roku ani nie interpoluj z błędnych wartości archiwalnych.
+- Zawsze unikaj zaniżania cen — przy braku pełnych danych stosuj średni lub górny zakres widełek rynkowych (nie dolny).
+
+📅 AKTUALNOŚĆ DANYCH:
+Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
+Nie wolno używać wcześniejszych dat (np. 2024, Q1 2025). 
+Jeśli dane kwartalne nie są jeszcze publikowane — interpoluj z poprzedniego kwartału, ale raport oznacz jako "${currentQuarter}".
+
+🎯 CEL:
+Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesłanej nieruchomości. 
+Zachowaj strukturę i ton eksperta.
+
+📊 STRUKTURA:
+1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️⃣ ANALIZA FINANSOWA (Jakub)  
+3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
+4️⃣ RYZYKA  
+5️⃣ REKOMENDACJA KOŃCOWA  
+6️⃣ PLAN 30 / 60 / 90 DNI  
+7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
+
+STYL:
+Ton ekspercki, rzeczowy, bez ozdobników.
+Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
+`,
       },
-      { role: "user", content: `${propertyData}` },
+      {
+        role: "user",
+        content: `${propertyData}
+
+Upewnij się, że raport DomAdvisor zawiera wszystkie powyższe sekcje w pełnym rozwinięciu (minimum kilka akapitów każda).
+Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
+      },
     ];
 
-    // 🧠 GPT generowanie raportu
+    // 🧠 Generowanie raportu
     const completion = await openai.chat.completions.create({
       model: "gpt-4.1",
       messages,
@@ -200,7 +237,7 @@ Każdy raport ma odnosić się do okresu ${currentQuarter}.`,
       from: `"DomAdvisor" <${process.env.MAIL_USER}>`,
       to: userEmail,
       subject: `Twój Raport Ekspercki DomAdvisor – ${month} ${year}`,
-      text: `Dziękujemy za skorzystanie z DomAdvisor Premium. W załączniku znajdziesz raport (${currentQuarter}).`,
+      text: `Dziękujemy za skorzystanie z DomAdvisor Premium. W załączniku znajdziesz szczegółowy raport (${currentQuarter}).`,
       attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }],
     });
 
