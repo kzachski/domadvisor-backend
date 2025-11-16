@@ -148,12 +148,13 @@ Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, s
       { role: "user", content: message },
     ];
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages,
-      temperature: 0.7,
-      max_tokens: 13000,
-    });
+   const response = await openai.chat.completions.create({
+  model: "gpt-5-turbo",
+  messages: [{ role: "user", content: reportPrompt }],
+  temperature: 1,
+  max_completion_tokens: 1200
+});
+
 
     const response = completion.choices[0].message.content;
     console.log("✅ Raport czatowy wygenerowany — długość:", response.length);
@@ -202,7 +203,7 @@ Uwzględnij wszystkie sekcje raportu oraz wnioski logiczne, bez skracania treśc
 const completion = await openai.chat.completions.create({
   model: "gpt-5",
   messages,
-  temperature: 0.65,
+  temperature: 1,
   max_completion_tokens: 15000,
 });
 
@@ -281,5 +282,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
+
 
 
