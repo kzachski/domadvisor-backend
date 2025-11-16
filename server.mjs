@@ -2,10 +2,9 @@
 // 🏠 DOMADVISOR PREMIUM BACKEND v3.7.0 (GPT-4o • Ekstra Premium 15–20 stron)
 // ============================================================================
 // • 5 realnych ofert porównawczych (SonarHome / Adresowo / TabelaOfert / NOL)
-// • Pełna struktura premium 1–7 (streszczenie → analiza finansowa → Magdalena → ryzyka…)
-// • PDF Premium: polskie znaki, NotoSans, nagłówki bold (styl 1 „minimalistyczny premium”)
-// • OpenAI GPT-4o w trybie chat.completions.create (najwyższa jakość generowania)
-// • Zero zmyślania ofert — tylko realne ogłoszenia online odfiltrowane pod kątem porównywalności
+// • Pełna struktura premium 1–7 (streszczenie → Jakub → Magdalena → ryzyka…)
+// • PDF Premium: polskie znaki (NotoSans), nagłówki bold (styl minimalistyczny)
+// • OpenAI GPT-4o (chat.completions.create — pełna jakość)
 // ============================================================================
 
 import express from "express";
@@ -22,12 +21,7 @@ import axios from "axios";
 dotenv.config();
 
 // ============================================================================
-// 🌐 SERPER — pobieranie REALNYCH ogłoszeń (Google → Sonar/Adres/Tabela/NOL)
-// ============================================================================
-//
-// UWAGA: Serper zwraca 10–15 ogłoszeń z internetu, które backend później
-// filtruje tak, aby pozostało 5 NAJBARDZIEJ PORÓWNYWALNYCH do analizowanej
-// nieruchomości.
+// 🌐 SERPER — pobieranie realnych ogłoszeń online
 // ============================================================================
 
 async function fetchOnlineListings(location) {
@@ -45,85 +39,63 @@ async function fetchOnlineListings(location) {
 
     const organic = response.data.organic || [];
 
-    // Przepisanie do bezpiecznego, czystego formatu
-    let listings = [];
-
-    organic.forEach((r) => {
-      listings.push({
-        title: r.title || "",
-        snippet: r.snippet || "",
-        link: r.link || "",
-      });
-    });
-
-    return listings;
-  } catch (error) {
-    console.error("Serper error:", error);
+    return organic.map(r => ({
+      title: r.title || "",
+      snippet: r.snippet || "",
+      link: r.link || ""
+    }));
+  } catch (err) {
+    console.error("Serper error:", err);
     return [];
   }
 }
 
 // ============================================================================
-// 🔍 FILTROWANIE OFERT — wybór 5 NAJBARDZIEJ porównywalnych ogłoszeń
-// ============================================================================
-//
-// Filtrujemy na podstawie:
-// • metrażu ±15%
-// • liczby pokoi
-// • typu budynku (przybliżenie z tekstu: blok/kamienica/apartament)
-// • standardu: niski/średni/wysoki (heurystyki językowe)
-// • lokalizacji: +/- 0,5–2 km
-//
-// Następnie wybieramy TOP 5 najlepszych dopasowań.
+// 🔍 FILTROWANIE ofert — wybór TOP 5 najbardziej porównywalnych
 // ============================================================================
 
 function extractNumeric(value) {
-  const numeric = parseFloat(String(value).replace(",", "."));
-  return isNaN(numeric) ? null : numeric;
+  const n = parseFloat(String(value).replace(",", "."));
+  return isNaN(n) ? null : n;
 }
 
-function guessStandard(text) {
-  text = text.toLowerCase();
-
-  if (text.includes("luksus") || text.includes("premium") || text.includes("wysoki"))
+function guessStandard(txt) {
+  txt = txt.toLowerCase();
+  if (txt.includes("luksus") || txt.includes("premium") || txt.includes("wysoki"))
     return "wysoki";
-
-  if (text.includes("do remont") || text.includes("niski") || text.includes("stary"))
+  if (txt.includes("remont") || txt.includes("niski") || txt.includes("stary"))
     return "niski";
-
   return "średni";
 }
 
-function guessRooms(text) {
-  const match = text.match(/(\d+)\s*poko/);
-  return match ? parseInt(match[1]) : null;
+function guessRooms(txt) {
+  const m = txt.match(/(\d+)\s*poko/);
+  return m ? parseInt(m[1]) : null;
 }
 
 function filterComparableListings(listings, subject) {
-  const result = [];
-
   const subjectArea = extractNumeric(subject.area);
   const subjectRooms = extractNumeric(subject.rooms);
 
-  listings.forEach((l) => {
-    const snippet = l.snippet.toLowerCase();
+  const result = [];
 
-    const areaMatch = snippet.match(/(\d+)\s?m2/);
-    const area = areaMatch ? parseFloat(areaMatch[1]) : null;
+  listings.forEach(l => {
+    const t = l.snippet.toLowerCase();
 
-    const rooms = guessRooms(snippet);
-    const std = guessStandard(snippet);
+    const mArea = t.match(/(\d+)\s?m2/);
+    const area = mArea ? parseFloat(mArea[1]) : null;
 
-    // Porównanie metrażu ±15%
+    const rooms = guessRooms(t);
+    const std = guessStandard(t);
+
+    // ±15% metrażu
     if (area && subjectArea) {
       const diff = Math.abs(area - subjectArea) / subjectArea;
-      if (diff > 0.15) return; // odrzucamy
+      if (diff > 0.15) return;
     }
 
-    // Porównanie liczby pokoi — jeśli występują w obu tekstach
-    if (rooms && subjectRooms && rooms !== subjectRooms) {
-      return;
-    }
+    // liczba pokoi
+    if (rooms && subjectRooms && rooms !== subjectRooms) return;
 
     result.push({
       title: l.title,
@@ -131,335 +103,206 @@ function filterComparableListings(listings, subject) {
       rooms,
       standard: std,
       link: l.link,
-      snippet: l.snippet,
+      snippet: l.snippet
     });
   });
 
-  // Top 5 najbardziej trafnych
   return result.slice(0, 5);
 }
 
 // ============================================================================
-// 🧠 OpenAI konfiguracja
+// 🧠 OpenAI konfig
 // ============================================================================
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 // ============================================================================
-// 📌 KONIEC CZĘŚCI A
-// ============================================================================
-//
-//  ⬇️  Napisz „gotowe A”, a wygeneruję dla Ciebie:
-//
-//      ✔ CZĘŚĆ B — SYSTEM PROMPT PREMIUM + /api/chat (skrótowa wersja raportu)
-//      ✔ CZĘŚĆ C — /api/send-report (pełny raport 15–20 stron + PDF Premium)
-//
+// ⚙️ EXPRESS — musi być TUTAJ zanim użyjemy app.post()
 // ============================================================================
 
+const app = express();
+app.use(cors());
+app.use(bodyParser.json({ limit: "4mb" }));
+
 // ============================================================================
-// 🧠 SYSTEM PROMPT — DomAdvisor Premium v3.7.0 (Ekstra Premium 15–20 stron)
-// ============================================================================
-//
-// Pełna struktura premium, bez skracania. Raport ma wyglądać
-// jak opracowanie doradcze EY/PwC/JLL.
+// 🧠 SYSTEM PROMPT PREMIUM 3.7.0 (15–20 stron)
 // ============================================================================
 
 const systemPromptPremium = String.raw`
 DOMADVISOR — SYSTEM PROMPT v3.7.0 (Ekstra Premium • 15–20 stron)
 
 TWOJA TOŻSAMOŚĆ:
-- Jesteś zespołem dwóch ekspertów:
-  • JAKUB — analityk finansowy (ROI, rentowność, fair value)
-  • MAGDALENA — architekt i home-stager (układ, standard, estetyka)
+- JAKUB — analityk finansowy
+- MAGDALENA — architekt i home-stager
 
-TWÓJ STYL:
-- profesjonalny
-- analityczny
-- precyzyjny
+STYL:
+- ekspercki, analityczny, precyzyjny
 - zero marketingu
-- zero języka potocznego
 - zero ozdobników
+- długie akapity, język doradczy (EY/PwC/JLL)
 
-ŹRÓDŁA DANYCH (wyłącznie publiczne):
-- SonarHome.pl — ceny ofertowe i mediany transakcyjne
-- Adresowo.pl — ceny mieszkań rynek wtórny
-- TabelaOfert.pl — rynek pierwotny
-- Nieruchomosci-online.pl — ogłoszenia prywatne/biura
-- NBP — kwartalne Biuletyny Cen Mieszkań (transakcje)
-- AMRON-SARFiN — raporty kwartalne (kredyty, rynek)
+ŹRÓDŁA:
+- SonarHome.pl
+- Adresowo.pl
+- TabelaOfert.pl
+- Nieruchomosci-online.pl
+- NBP — Biuletyny Cen
+- AMRON-SARFiN
 
-DANE ONLINE:
-- Na wejściu otrzymasz 5 realnych ofert porównawczych (już odfiltrowanych).
-- Musisz je wykorzystać do:
-  • porównania poziomego
-  • mediany cen m2
-  • wyznaczenia “fair value”
-  • oceny, czy oferta jest okazyjna / rynkowa / przeszacowana
-
-OBOWIĄZKOWA STRUKTURA RAPORTU PREMIUM:
-1. STRESZCZENIE OFERTY (krótko, ale rzeczowo)
-2. ANALIZA FINANSOWA (Jakub):
-   - cena m2 vs rynek
-   - analiza pięciu ofert porównawczych
-   - mediana, średnia, odchylenia
-   - popyt/podaż (NBP/AMRON + dane online)
-   - wyznaczenie wartości „fair value”
-   - scenariusze cenowe w 12 miesiącach
-3. ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena):
-   - układ
-   - doświetlenie
-   - ciągi komunikacyjne
-   - standard
-   - koszty potencjalnego remontu
-4. ANALIZA LOKALNEGO RYNKU:
-   - dzielnica
-   - ulice
-   - otoczenie
-   - dostępność usług
-   - węzły komunikacyjne
-   - trendy w dzielnicy w ostatnich 12 miesiącach
-5. RYZYKA:
-   - popyt
-   - podaż
-   - kredytowanie
-   - ryzyka techniczne
-   - ryzyka dla flipa / wynajmu
-6. REKOMENDACJA KOŃCOWA:
-   - ocena ogólna
-   - czy oferta jest promocyjna / rynkowa / przeszacowana
-   - rekomendowany przedział cenowy negocjacji
-7. PLAN DZIAŁANIA 30 / 60 / 90 DNI
+STRUKTURA (OBOWIĄZKOWA):
+1. STRESZCZENIE
+2. ANALIZA FINANSOWA (Jakub)
+3. ANALIZA FUNKCJONALNA (Magdalena)
+4. ANALIZA RYNKU LOKALNEGO
+5. RYZYKA
+6. REKOMENDACJA KOŃCOWA
+7. PLAN 30/60/90
 8. ŹRÓDŁA + METODOLOGIA
 
-ZASADY:
-- Nie pomijaj sekcji.
-- Nie skracaj tekstu.
-- Raport ma mieć 15–20 stron (długie, rozbudowane akapity).
-- Jeśli brakuje danych liczbowych — stosuj interpolację i mediany.
-- Nie wolno używać danych komercyjnych ani zmyślać ofert.
-- Oferty porównawcze są realne i podane w DANE ONLINE — koniecznie korzystaj.
-- We wszystkich analizach liczbowych stosuj logikę i zakresy ±5%.
-
-CEL:
-Stworzyć raport o jakości profesjonalnej ekspertyzy, nadający się do sprzedaży jako dokument premium.
+WYMOGI:
+- 15–20 stron
+- nie pomijaj żadnej sekcji
+- użyj 5 ofert porównawczych dostarczonych w danych online
+- wylicz: mediany, różnice cen, fair value, scenariusze roczne
 `;
 
 // ============================================================================
-// 💬 /api/chat — wersja skrócona (4–5 stron), ale w stylu premium
+// 💬 /api/chat — skrócona wersja raportu (4–5 stron)
 // ============================================================================
 
 app.post("/api/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
-    const messages = [
-      { role: "system", content: systemPromptPremium + "\nTryb: analiza skrócona (4–5 stron)." },
-      { role: "user", content: message }
-    ];
-
     const completion = await client.chat.completions.create({
       model: "gpt-4o",
-      messages,
       temperature: 0.55,
-      max_tokens: 2000
+      max_tokens: 2000,
+      messages: [
+        { role: "system", content: systemPromptPremium + "\nTryb: analiza skrócona 4–5 stron." },
+        { role: "user", content: message }
+      ]
     });
 
-    const out = completion.choices[0].message.content;
+    res.json({
+      success: true,
+      response: completion.choices[0].message.content
+    });
 
-    res.json({ success: true, response: out });
   } catch (err) {
-    console.error("CHAT API ERROR:", err);
+    console.error("CHAT ERROR:", err);
     res.json({ success: false, error: err.message });
   }
 });
 
 // ============================================================================
-// 📌 KONIEC CZĘŚCI B
-// ============================================================================
-//
-//  ⬇️  Napisz „gotowe B”, a wyślę Ci:
-//
-//      ✔ CZĘŚĆ C — /api/send-report → PEŁNY RAPORT PREMIUM 15–20 stron
-//         wraz z generowaniem PDF (NotoSans, nagłówki premium, podział sekcji)
-//
-// ============================================================================
-
-// ============================================================================
-// 📧 /api/send-report — pełny raport PREMIUM 15–20 stron
-// ============================================================================
-//
-// W tym endpointzie odbywa się:
-//
-// ✔ pobranie realnych ofert z internetu (Serper)  
-// ✔ filtrowanie do 5 najbardziej porównywalnych  
-// ✔ przygotowanie pełnego promtu premium  
-// ✔ generacja raportu GPT-4o (15–20 stron tekstu)  
-// ✔ konwersja do PDF Premium (polskie znaki + nagłówki bold)  
-// ✔ wysyłka e-mail z załącznikiem
-//
+// 📧 /api/send-report — pełny raport 15–20 stron + PDF + email
 // ============================================================================
 
 app.post("/api/send-report", async (req, res) => {
   try {
     const { userEmail, propertyData } = req.body;
 
-    if (!userEmail || !propertyData) {
-      return res.status(400).json({ error: "Brak emaila lub danych nieruchomości." });
-    }
+    if (!userEmail || !propertyData)
+      return res.status(400).json({ error: "Brak emaila lub danych ogłoszenia." });
 
-    // ========================================================================
-    // 1) Pobranie realnych ofert z internetu
-    // ========================================================================
-
+    // 1) Pobranie ofert online
     const rawListings = await fetchOnlineListings(propertyData.location || "");
     const comparable = filterComparableListings(rawListings, propertyData);
 
-    // Przygotowanie listy ofert w formacie tekstowym do przekazania GPT:
     let comparableText = "";
-
     comparable.forEach((l, i) => {
       comparableText += `
 ${i + 1}. ${l.title}
-   - Metraż: ${l.area || "brak danych"} m2
-   - Pokoje: ${l.rooms || "brak danych"}
-   - Standard: ${l.standard || "brak danych"}
+   - Metraż: ${l.area || "brak"} m2
+   - Pokoje: ${l.rooms || "brak"}
+   - Standard: ${l.standard}
    - Link: ${l.link}
    - Opis: ${l.snippet}
 `;
     });
 
-    // Jeśli z jakiegoś powodu Serper zwróci zero — unikamy błędów:
-    if (comparable.length === 0) {
-      comparableText = "Brak porównywalnych ofert — użyj uśrednionych danych SonarHome + Adresowo.";
-    }
-
-    // ========================================================================
-    // 2) Przygotowanie daty i nagłówków raportu
-    // ========================================================================
+    if (comparable.length === 0)
+      comparableText = "Brak danych online. Użyj median SonarHome + Adresowo.";
 
     const now = new Date();
     const month = now.toLocaleString("pl-PL", { month: "long" });
     const year = now.getFullYear();
     const quarter = Math.ceil((now.getMonth() + 1) / 3);
-    const currentQuarter = `Q${quarter} ${year}`;
 
-    // ========================================================================
-    // 3) Przygotowanie promtu premium — pełne 15–20 stron
-    // ========================================================================
-
-    const messages = [
-      {
-        role: "system",
-        content: systemPromptPremium + `
-
-DANE ONLINE — OFERTY PORÓWNAWCZE:
-${comparableText}
-
-ZASADY:
-- Wykorzystaj WSZYSTKIE powyższe oferty.
-- Zrób pełną analizę porównawczą: ceny m2, mediany, odchylenia, różnice standardu.
-- Zrób wycenę „fair value”.
-- Cały raport 15–20 stron.
-- Każda sekcja ma mieć długie akapity.
-- W PDF muszą się pojawić nagłówki premium (H1, H2).
-`
-      },
-      {
-        role: "user",
-        content: `
-DANE DO RAPORTU:
-${JSON.stringify(propertyData, null, 2)}
-`
-      }
-    ];
-
-    // ========================================================================
-    // 4) GPT-4o — pełna generacja raportu
-    // ========================================================================
-
+    // 2) GPT-4o — pełny raport
     const completion = await client.chat.completions.create({
       model: "gpt-4o",
-      messages,
       temperature: 0.55,
-      max_tokens: 15000
+      max_tokens: 15000,
+      messages: [
+        {
+          role: "system",
+          content: systemPromptPremium + `
+
+OFERTY PORÓWNAWCZE ONLINE:
+${comparableText}
+
+Użyj WSZYSTKICH powyższych ofert do analiz.
+Raport ma mieć 15–20 stron, pełna struktura premium.`
+        },
+        {
+          role: "user",
+          content: JSON.stringify(propertyData, null, 2)
+        }
+      ]
     });
 
-    let report = completion.choices[0].message.content || "Brak treści raportu.";
+    let report = completion.choices[0].message.content || "Brak treści.";
 
-    // ========================================================================
-    // 5) Generowanie PDF Premium
-    // ========================================================================
-
-    const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
-    const doc = new PDFDocument({
-      size: "A4",
-      margin: 50
-    });
+    // 3) PDF Premium
+    const pdfPath = path.join("/tmp", `DomAdvisor-${Date.now()}.pdf`);
+    const doc = new PDFDocument({ size: "A4", margin: 50 });
 
     const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
     if (fs.existsSync(fontPath)) doc.font(fontPath);
 
-    const writeStream = fs.createWriteStream(pdfPath);
-    doc.pipe(writeStream);
+    const ws = fs.createWriteStream(pdfPath);
+    doc.pipe(ws);
 
-    // ========================================================================
-    // Nagłówek główny PDF
-    // ========================================================================
-
-    doc.fontSize(22).font(fontPath).text("DomAdvisor – Raport Ekspercki PREMIUM", {
-      align: "center"
-    });
-
-    doc.moveDown(0.5);
+    // Nagłówek główny
+    doc.fontSize(22).text("DomAdvisor – Raport Ekspercki PREMIUM", { align: "center" });
+    doc.moveDown();
     doc.fontSize(11).fillColor("#555")
-      .text(`Wersja Premium • ${month} ${year} • ${currentQuarter}`, { align: "center" });
+      .text(`Wersja Premium • ${month} ${year} • Q${quarter}`, { align: "center" });
+    doc.moveDown(1);
+    doc.fillColor("#000").fontSize(12);
 
-    doc.moveDown(1.2);
-    doc.fillColor("#000");
-
-    // ========================================================================
-    // Formatowanie tekstu: nagłówki premium (bold + większe)
-    // ========================================================================
-
-    function addSectionTitle(title) {
-      doc.moveDown(1);
-      doc.fontSize(16).fillColor("#000").font(fontPath).text(title, { underline: false });
+    // Nagłówki sekcji
+    function section(title) {
+      doc.moveDown();
+      doc.fontSize(16).text(title);
       doc.moveDown(0.3);
-      doc.fontSize(12).fillColor("#000");
+      doc.fontSize(12);
     }
 
-    // ========================================================================
-    // Raport GPT dzielimy na sekcje na podstawie nagłówków H1/H2
-    // ========================================================================
+    // Podział na sekcje
+    const parts = report.split(/\n(?=[0-9]+\.)/g);
 
-    let sections = report.split(/\n(?=[0-9]+\.)/g); // np. "1. STRESZCZENIE"
-
-    sections.forEach((section) => {
-      const firstLine = section.split("\n")[0].trim();
-
+    parts.forEach(sec => {
+      const firstLine = sec.split("\n")[0].trim();
       if (/^[0-9]+\./.test(firstLine)) {
-        addSectionTitle(firstLine);
-        doc.text(section.replace(firstLine, "").trim(), {
+        section(firstLine);
+        doc.text(sec.replace(firstLine, "").trim(), {
           align: "justify",
           lineGap: 5
         });
       } else {
-        doc.text(section.trim(), {
-          align: "justify",
-          lineGap: 5
-        });
+        doc.text(sec.trim(), { align: "justify", lineGap: 5 });
       }
     });
 
     doc.end();
-    await new Promise((resolve) => writeStream.on("finish", resolve));
+    await new Promise(r => ws.on("finish", r));
 
-    // ========================================================================
-    // 6) Wysyłka e-mail z raportem
-    // ========================================================================
-
+    // 4) Email
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
@@ -471,53 +314,41 @@ ${JSON.stringify(propertyData, null, 2)}
     });
 
     await transporter.sendMail({
-      from: `DomAdvisor Premium <${process.env.MAIL_USER}>`,
+      from: `DomAdvisor <${process.env.MAIL_USER}>`,
       to: userEmail,
-      subject: `Twój Raport Ekspercki DomAdvisor • ${month} ${year}`,
-      text: `Dziękujemy za skorzystanie z DomAdvisor Premium. W załączniku znajduje się pełny raport (ok. 15–20 stron).`,
-      attachments: [
-        {
-          filename: "DomAdvisor-Raport.pdf",
-          path: pdfPath
-        }
-      ]
+      subject: `Raport Ekspercki DomAdvisor • ${month} ${year}`,
+      text: "Dziękujemy za skorzystanie z DomAdvisor Premium. Raport znajduje się w załączniku.",
+      attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }]
     });
 
-    // Po wysłaniu usuwamy plik
     if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
 
     res.json({ success: true, message: "Raport PREMIUM został wysłany." });
 
   } catch (err) {
-    console.error("REPORT API ERROR:", err);
+    console.error("REPORT ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 // ============================================================================
-// 🌍 ROOT + TEST ENDPOINTS
+// TEST + ROOT
 // ============================================================================
-
-app.get("/", (req, res) => {
-  res.setHeader("Content-Type", "text/plain; charset=utf-8");
-  res.send("DomAdvisor Premium backend v3.7.0 działa poprawnie.");
-});
 
 app.get("/api/test-serper", async (req, res) => {
   const r = await fetchOnlineListings("Gdańsk Żabianka");
   res.json(r);
 });
 
+app.get("/", (req, res) => {
+  res.send("DomAdvisor Premium backend v3.7.0 działa poprawnie.");
+});
+
 // ============================================================================
-// 🚀 START SERWERA
+// 🚀 START
 // ============================================================================
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`DomAdvisor Premium v3.7.0 działa na porcie ${PORT}`);
+  console.log("DomAdvisor Premium v3.7.0 działa na porcie " + PORT);
 });
-
-// ============================================================================
-// 📌 KONIEC CZĘŚCI C — GOTOWY BACKEND v3.7.0
-// ============================================================================
-
