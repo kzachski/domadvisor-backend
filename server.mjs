@@ -16,9 +16,6 @@ import OpenAI from "openai";
 
 dotenv.config();
 
-/* =====================================================================
-   🔧 SYSTEM PROMPT — DO WYPEŁNIENIA W 4 CZĘŚCIACH (poza tym plikiem)
-   ===================================================================== */
 ============================================================
 DOMADVISOR PREMIUM – SYSTEM PROMPT v4.0 MASTER PRO
 (architektura: FULL STACK • strict mode • PDF mode)
@@ -917,3 +914,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`DomAdvisor backend działa na porcie ${PORT}`);
 });
+
