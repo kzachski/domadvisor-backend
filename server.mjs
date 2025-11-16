@@ -199,13 +199,13 @@ Uwzględnij wszystkie sekcje raportu oraz wnioski logiczne, bez skracania treśc
       },
       { role: "user", content: `${propertyData}` },
     ];
+const completion = await openai.chat.completions.create({
+  model: "gpt-5",
+  messages,
+  temperature: 0.65,
+  max_completion_tokens: 15000,
+});
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages,
-      temperature: 0.65,
-      max_tokens: 15000,
-    });
 
     let reportText = completion.choices[0].message.content || "";
 
@@ -281,4 +281,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
+
 
