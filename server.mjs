@@ -25,8 +25,8 @@ async function getLiveMarketData(location) {
       headers: { "X-API-KEY": process.env.SERPER_API_KEY },
       params: {
         q: `średnie ceny mieszkań ${location} ceny m2 analiza site:sonarhome.pl OR site:adresowo.pl OR site:tabelaofert.pl OR site:nieruchomosci-online.pl`,
-        num: 5,
-      },
+        num: 5
+      }
     });
 
     const organic = response.data.organic || [];
@@ -43,7 +43,7 @@ async function getLiveMarketData(location) {
 }
 
 // =============================================================
-// 🧠 SYSTEM PROMPT — DomAdvisor Premium (GPT-4o)
+// 🧠 SYSTEM PROMPT — DomAdvisor Premium
 // =============================================================
 const systemPrompt = String.raw`
 DOMADVISOR – SYSTEM PROMPT v3.6.2 (GPT-4o Optimized)
@@ -67,7 +67,7 @@ Styl:
 - zero ozdobników
 
 Role:
-- Jakub – analityk finansowy (ROI, cashflow)
+- Jakub – analityk finansowy
 - Magdalena – architekt i home-stager
 
 ŹRÓDŁA:
@@ -79,7 +79,7 @@ Role:
 - AMRON-SARFiN
 
 Zakazy:
-- brak użycia danych komercyjnych (np. Otodom Analytics)
+- brak danych komercyjnych
 - brak fikcyjnych danych
 
 Struktura raportu:
@@ -90,16 +90,6 @@ Struktura raportu:
 5. Rekomendacja
 6. Plan 30/60/90
 7. Źródła + metodologia
-
-Metodologia:
-- preferuj mediany
-- kalibruj na podstawie NBP i AMRON
-- uwzględniaj inflację 6–8%
-- widełki ±5% w dużych miastach
-
-Cel:
-Raport ekspercki — język profesjonalny, klarowny i spójny.
-Nie stanowi rekomendacji inwestycyjnej w sensie prawnym.
 `;
 
 // =============================================================
@@ -112,47 +102,40 @@ app.use(bodyParser.json({ limit: "3mb" }));
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // =============================================================
-// 💬 /api/chat — skrócona analiza
+// 💬 /api/chat
 // =============================================================
 app.post("/api/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
 
     const messages = [
-      {
-        role: "system",
-        content: systemPrompt + "\nTryb: Skrócona analiza (1000–1500 słów).",
-      },
+      { role: "system", content: systemPrompt + "\nTryb: Skrócona analiza (1000–1500 słów)." },
       ...(Array.isArray(history) ? history : []),
-      { role: "user", content: message },
+      { role: "user", content: message }
     ];
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages,
       temperature: 0.6,
-      max_output_tokens: 1500,
+      max_output_tokens: 1500
     });
 
-    const output = completion.choices[0].message.content;
-    res.json({ success: true, response: output });
+    res.json({ success: true, response: completion.choices[0].message.content });
   } catch (error) {
     res.json({ success: false, error: error.message });
   }
 });
 
 // =============================================================
-// 📧 /api/send-report — pełny raport PDF Premium
+// 📧 /api/send-report – pełny PDF premium
 // =============================================================
 app.post("/api/send-report", async (req, res) => {
   try {
     const { userEmail, propertyData } = req.body;
-    if (!userEmail || !propertyData)
-      return res.status(400).json({ error: "Brak danych" });
+    if (!userEmail || !propertyData) return res.status(400).json({ error: "Brak danych" });
 
-    const liveData = await getLiveMarketData(
-      propertyData.location || "lokalizacja nieznana"
-    );
+    const liveData = await getLiveMarketData(propertyData.location || "lokalizacja nieznana");
 
     const now = new Date();
     const month = now.toLocaleString("pl-PL", { month: "long" });
@@ -161,25 +144,26 @@ app.post("/api/send-report", async (req, res) => {
     const messages = [
       {
         role: "system",
-        content:
-          systemPrompt +
-          `\n\nDANE RYNKOWE ONLINE:\n${liveData}\n\nTryb: Pełny raport PDF (9000–12000 znaków).`,
+        content: `${systemPrompt}
+
+DANE RYNKOWE ONLINE:
+${liveData}
+
+Tryb: Pełny raport PDF (9000–12000 znaków).`
       },
-      { role: "user", content: JSON.stringify(propertyData) },
+      { role: "user", content: JSON.stringify(propertyData) }
     ];
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages,
       temperature: 0.55,
-      max_output_tokens: 8000,
+      max_output_tokens: 8000
     });
 
     let report = completion.choices[0].message.content || "Brak treści";
 
-    // =============================================================
-    // 📝 Generowanie PREMIUM PDF
-    // =============================================================
+    // PDF ===========================================================
     const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
     const doc = new PDFDocument({ margin: 50, size: "A4" });
 
@@ -190,33 +174,29 @@ app.post("/api/send-report", async (req, res) => {
     doc.pipe(stream);
 
     doc.fontSize(22).text("DomAdvisor – Raport Ekspercki", { align: "center" });
-    doc.moveDown(0.4);
-    doc.fontSize(11)
-      .fillColor("#555")
+    doc.moveDown(0.5);
+    doc.fontSize(11).fillColor("#555")
       .text(`Wersja Premium • ${month} ${year}`, { align: "center" });
     doc.moveDown(1);
 
-    // konwersja markdown → nagłówki
     report = report
       .replace(/\n###? (.*)/g, (_, t) => `\n\n${t.toUpperCase()}\n`)
       .replace(/[#*_`]/g, "");
 
-    doc.fillColor("#000").fontSize(12).text(report, {
+    doc.fontSize(12).fillColor("#000").text(report, {
       align: "justify",
-      lineGap: 6,
+      lineGap: 6
     });
 
     doc.end();
-    await new Promise((r) => stream.on("finish", r));
+    await new Promise((resolve) => stream.on("finish", resolve));
 
-    // =============================================================
-    // ✉️ Wysyłka e-mail
-    // =============================================================
+    // E-mail =========================================================
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
       secure: true,
-      auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
+      auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
     });
 
     await transporter.sendMail({
@@ -224,12 +204,12 @@ app.post("/api/send-report", async (req, res) => {
       to: userEmail,
       subject: `Raport Ekspercki DomAdvisor – ${month} ${year}`,
       text: "Dziękujemy za skorzystanie z DomAdvisor Premium. Raport w załączniku.",
-      attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }],
+      attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }]
     });
 
     fs.unlinkSync(pdfPath);
-
     res.json({ success: true, message: "Raport wysłany." });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -240,21 +220,18 @@ app.post("/api/send-report", async (req, res) => {
 // 🧪 Test Serper
 // =============================================================
 app.get("/api/test-serper", async (req, res) => {
-  const data = await getLiveMarketData("Gdańsk Żabianka");
-  res.send(data);
+  res.send(await getLiveMarketData("Gdańsk Żabianka"));
 });
 
 // =============================================================
-// 🌍 Root endpoint
+// 🌍 Root
 // =============================================================
 app.get("/", (req, res) => {
   res.send("DomAdvisor backend działa poprawnie.");
 });
 
 // =============================================================
-// 🚀 Start serwera
+// 🚀 Start
 // =============================================================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`DomAdvisor działa na porcie ${PORT}`)
-);
+app.listen(PORT, () => console.log(`DomAdvisor działa na porcie ${PORT}`));
