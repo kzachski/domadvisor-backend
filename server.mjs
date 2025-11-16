@@ -1,8 +1,7 @@
-// ==========================================================
-// DomAdvisor Premium Backend v5.1 (Anti-Confab, Stable)
-// Model: gpt-5.1
-// PUBLIC DATA ONLY • ZERO GUESSING • STRICT REPORT MODE
-// ==========================================================
+/* =========================================================
+   DomAdvisor Backend v5.1 — PREMIUM / ZERO CONFABULATION
+   OpenAI Responses API • Serper.dev • PDF • SMTP
+   ========================================================= */
 
 import express from "express";
 import cors from "cors";
@@ -17,405 +16,214 @@ import OpenAI from "openai";
 
 dotenv.config();
 
-// ==========================================================
-// 🌐 SERPER.DEV — POBIERANIE PRAWDZIWYCH DANYCH
-// (zero wymyślania — model otrzymuje to 1:1)
-// ==========================================================
+/* =========================================================
+   🌐 SERPER — pobieranie danych (TYLKO TO, NIC WIĘCEJ!)
+   ========================================================= */
 async function getLiveMarketData(location) {
   try {
-    const response = await axios.get("https://google.serper.dev/search", {
+    const r = await axios.get("https://google.serper.dev/search", {
       headers: { "X-API-KEY": process.env.SERPER_API_KEY },
       params: {
-        q: `ceny mieszkań ${location} 2024 2025 SonarHome Adresowo Nieruchomosci-online`,
-        num: 10,
+        q: `średnie ceny mieszkań ${location} 2025 analiza SonarHome Adresowo Nieruchomosci-online`,
+        num: 7
       }
     });
 
-    if (!response.data.organic) return "Brak danych rynkowych.";
+    if (!r.data.organic || r.data.organic.length === 0) {
+      return "BRAK DANYCH. Backend nie zwrócił wyników.";
+    }
 
-    return response.data.organic
-      .map((r, i) => {
-        return `${i + 1}. ${r.title || ""}
-${r.snippet || ""}
-Źródło: ${r.link || ""}
+    return r.data.organic
+      .map((x, i) => {
+        return `
+Wynik ${i + 1}
+Tytuł: ${x.title || "brak"}
+Opis: ${x.snippet || "brak"}
+Źródło: ${x.link || "brak"}
 `;
       })
       .join("\n");
   } catch (err) {
-    console.error("Serper error:", err);
-    return "Brak danych rynkowych.";
-  }
-}
-
-// ==========================================================
-// ⚙️ OPENAI — GPT-5.1
-// ==========================================================
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// ==========================================================
-// 🚀 EXPRESS
-// ==========================================================
-const app = express();
-app.use(cors());
-app.use(bodyParser.json({ limit: "5mb" }));
-
-// ==========================================================
-// 🛑 ANTI-CONFAB MIDDLEWARE
-// Chroni przed zmyślaniem i błędami logicznymi
-// ==========================================================
-function sanitizeAIOutput(text) {
-  if (!text) return "";
-
-  // usuwa markdown, emoji i formatowanie nieciągłe
-  return text
-    .replace(/[#*_`~]/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-const systemPrompt = String.raw`
-DOMADVISOR PREMIUM — SYSTEM PROMPT v5.1 ANTI-CONFAB (2025)
-
-============================================================
-IDENTYFIKACJA I TONY
-============================================================
-Jesteśmy zespołem dwóch ekspertów:
-
-Jakub — analityk finansowy (ROI, cap rate, cashflow, negocjacje, koszty).
-Magdalena — architekt i home-stager (układ, ergonomia, estetyka, liftingi).
-
-Pisz w pierwszej osobie liczby mnogiej. 
-Styl: EY/JLL. Zero marketingu, zero emocji, zero lania wody.
-
-============================================================
-ZASADA GŁÓWNA — ZERO ZGADYWANIA
-============================================================
-Model NIE MOŻE:
-- wymyślać cen m²,
-- wymyślać danych o rynku,
-- wymyślać dodatkowych ogłoszeń,
-- tworzyć własnych przedziałów cenowych,
-- używać liczb, jeśli nie pochodzą z:
-  • użytkownika,
-  • Serper.dev,
-  • SonarHome (publiczne),
-  • NBP (dane transakcyjne),
-  • AMRON-SARFiN,
-  • Adresowo / Nieruchomosci-online / TabelaOfert.
-
-Jeśli jakiejś liczby NIE MA w danych → NIE WOLNO jej tworzyć.
-
-Jeśli w Serper snippets nie ma cen → ZAWSZE stosujesz interpolację.
-
-============================================================
-ZASADA INTERPOLACJI PREMIUM
-============================================================
-Jeśli brakuje ceny/m2 dla dzielnicy:
-- używamy mediany MIASTA (NBP i AMRON),
-- korekta ±5–8% jeśli to uzasadnione,
-- musisz wpisać zdanie:
-
-"Brak lokalnych danych → zastosowano interpolację w oparciu o mediany miasta oraz najnowsze dane NBP/AMRON."
-
-============================================================
-DANE Z SERPER.DEV — TYLKO OPISUJESZ TO, CO DOSTAŁEŚ
-============================================================
-Model dostaje „DANE RYNKOWE ONLINE:” — w formie surowej.
-Model może:
-- opisać te dane,
-- porównać,
-- użyć liczb z tekstów, jeśli występują,
-- wskazać brak cen.
-
-Model NIE MOŻE:
-- rozszerzać,
-- dopowiadać,
-- wymyślać linków/kwot,
-- generować dodatkowych ofert.
-
-============================================================
-STRUKTURA PEŁNEGO RAPORTU (MUSI BYĆ ZACHOWANA)
-============================================================
-Każdy pełny raport PDF (endpoint /send-report) musi mieć:
-
-1. STRESZCZENIE / DANE OGÓLNE  
-2. ANALIZA FINANSOWA (Jakub)  
-3. ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
-4. RYZYKA  
-5. REKOMENDACJA KOŃCOWA  
-6. PLAN 30/60/90 DNI  
-7. ŹRÓDŁA DANYCH I METODOLOGIA  
-
-Wszystkie sekcje min. 2 akapity.  
-Zero list punktowanych, zero markdown.
-
-============================================================
-WERSJA CHAT — SKRÓCONA
-============================================================
-Dla endpointu /api/chat:
-- 1000–1500 słów,
-- nadal ekspercki styl,
-- można skracać, ale nie wolno zgadywać.
-
-============================================================
-ANALIZA FINANSOWA — ZASADY
-============================================================
-Jakub musi:
-- wyliczyć cenę/m² tylko jeśli cena i metraż są podane,
-- porównać do danych NBP/AMRON/Sonar,
-- wskazać różnice trendów,
-- liczyć cap rate wyłącznie na podstawie KWOT podanych w ogłoszeniu lub realnych stawek najmu (jeśli są w Serper),
-- NIE MOŻE użyć żadnej stawki czynszu, jeżeli nie ma jej w danych,
-- używa interpolacji przy braku danych.
-
-============================================================
-ANALIZA FUNKCJONALNO-ESTETYCZNA
-============================================================
-Magdalena:
-- ocenia układ, komunikację, światło,
-- opisuje warianty liftingów A/B/C,
-- kosztorysy muszą być realne, ale nie wymyślone liczby — bazują na widełkach rynkowych (600–1800 zł/m²), bez skrajności,
-- zero opisów marketingowych.
-
-============================================================
-RYZYKA
-============================================================
-Zawsze min. 2 akapity:
-- ryzyka techniczne,
-- ryzyka finansowe,
-- ryzyka prawne (ale bez zgadywania KW).
-
-============================================================
-REKOMENDACJA KOŃCOWA
-============================================================
-Opcje:
-- Kup,
-- Kup po negocjacji,
-- Odradzamy.
-
-Rekomendacja musi być oparta na realnych danych, nie domysłach.
-
-============================================================
-PLAN 30/60/90 DNI
-============================================================
-W oparciu o cel użytkownika (zakup, najem, flip).
-
-============================================================
-ŹRÓDŁA — BLOK KOŃCOWY (STAŁY, NIE ZMIENIAĆ)
-============================================================
-Źródła danych i metodologia:
-SonarHome  
-NBP  
-AMRON-SARFiN  
-Adresowo.pl  
-Nieruchomosci-online.pl  
-Dane pobrane przez backend DomAdvisor z wyszukiwarki Google (Serper.dev).  
-Analiza ma charakter interpretacyjny i nie stanowi porady inwestycyjnej.
-`
-/* =========================================================
-   DOMADVISOR PREMIUM BACKEND v5.1 (2025)
-   GPT-5.1-instant • Serper.dev • PDF • E-mail (SMTP)
-   Anti-Confab Mode — Stable Release
-   ========================================================= */
-
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import OpenAI from "openai";
-import dotenv from "dotenv";
-import nodemailer from "nodemailer";
-import PDFDocument from "pdfkit";
-import fs from "fs";
-import path from "path";
-import axios from "axios";
-
-dotenv.config();
-
-/* =========================================================
-   🌐 FUNKCJA: Pobieranie danych rynkowych z Serper.dev
-   ========================================================= */
-async function getLiveMarketData(location) {
-  try {
-    const response = await axios.get("https://google.serper.dev/search", {
-      headers: { "X-API-KEY": process.env.SERPER_API_KEY },
-      params: {
-        q: `ceny mieszkań ${location} analiza rynku SonarHome Adresowo Nieruchomosci-online`,
-        num: 7,
-      },
-    });
-
-    const organic = response.data.organic || [];
-
-    let txt = "";
-    organic.forEach((r, i) => {
-      txt += `\n${i + 1}. ${r.title || ""}\n${r.snippet || ""}\nŹródło: ${
-        r.link || ""
-      }\n`;
-    });
-
-    return txt || "Brak danych rynkowych.";
-  } catch (err) {
-    console.error("❌ Serper error:", err.message);
-    return "Brak danych rynkowych.";
+    console.error("Serper error:", err.message);
+    return "BRAK DANYCH. Wystąpił błąd sieciowy.";
   }
 }
 
 /* =========================================================
-   🧠 OpenAI Client (GPT-5.1-instant)
+   🧠 OpenAI 5.1 – Responses API
    ========================================================= */
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 /* =========================================================
-   🚀 Express
+   🏛️ SYSTEM PROMPT — ZERO KONFABULACJI
+   ========================================================= */
+const systemPrompt = `
+Jesteś DomAdvisor Premium 2025 — ekspercki duet:
+Jakub (finanse, ROI, cap rate)
+Magdalena (architektura, układ, ergonomia).
+
+ZASADY ABSOLUTNE:
+1) ZERO zmyślania (0%).  
+2) Jeśli nie masz danych → PISZESZ WPROST: "backend nie dostarczył danych".  
+3) ŻADNYCH interpolacji, żadnych zgadywań.  
+4) Cytujesz WYŁĄCZNIE dane, które backend dostarczył (Serper.dev + treść ogłoszenia).  
+5) Nie generujesz liczb z powietrza.  
+6) Nie podajesz cen za m², jeśli nie są podane.  
+7) Nie tworzysz „porównywarek”, jeśli backend nie wysłał linków.
+
+STRUKTURA RAPORTU (OBOWIĄZKOWA):
+1. Streszczenie i dane ogólne (na podstawie ogłoszenia)
+2. Analiza finansowa (tylko dane z ogłoszenia + dane z backendu – bez zgadywania)
+3. Analiza funkcjonalno-estetyczna
+4. Ryzyka
+5. Rekomendacja końcowa
+6. Plan 30/60/90 dni
+7. Źródła danych (stały blok)
+
+STYL:
+– długie akapity
+– język ekspercki
+– żadnych list, punktorów ani markdown
+– żadnych liczb bez źródła
+– jeśli brakuje danych → to podkreślasz
+
+ŹRÓDŁA (jedynie dostępne):
+– dane z ogłoszenia użytkownika
+– wyniki z Serper.dev (opisowe)
+– SonarHome / Adresowo / Nieruchomosci-online (Tylko jeśli backend je poda!)
+
+NIE MASZ INNYCH DANYCH.
+`;
+
+/* =========================================================
+   🚀 EXPRESS
    ========================================================= */
 const app = express();
 app.use(cors());
-app.use(bodyParser.json({ limit: "5mb" }));
+app.use(bodyParser.json({ limit: "3mb" }));
 
 /* =========================================================
-   💬 /api/chat — wersja skrócona (1000–1500 słów)
+   🟦 /api/chat — wersja skrócona (czat)
    ========================================================= */
 app.post("/api/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
 
-    const messages = [
-      { role: "system", content: systemPrompt + "\nTRYB: ANALIZA SKRÓCONA 1000–1500 słów. Zero zgadywania." },
-      ...(Array.isArray(history) ? history : []),
-      { role: "user", content: message },
+    const input = [
+      { role: "system", content: systemPrompt + "\nTryb skrócony (1000–1500 słów)." },
+      ...(history || []),
+      { role: "user", content: message }
     ];
 
     const ai = await openai.responses.create({
-      model: "gpt-4.1",
-      input: messages,
+      model: "gpt-5.1",
+      input,
       max_output_tokens: 3500,
-      temperature: 0.5,
+      temperature: 0.35
     });
 
-    const out = ai.output_text || ai.output?.[0]?.content?.[0]?.text || "Brak odpowiedzi.";
+    const out =
+      ai.output_text ||
+      ai.output?.[0]?.content?.[0]?.text ||
+      "Brak treści od AI.";
 
     res.json({ success: true, response: out });
   } catch (err) {
-    console.error("❌ Chat error:", err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error("Chat error:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
 /* =========================================================
-   📧 /api/send-report — pełny raport PDF (9000–15000 znaków)
+   🟥 /api/send-report — pełny PDF
    ========================================================= */
 app.post("/api/send-report", async (req, res) => {
   try {
     const { userEmail, propertyData } = req.body;
 
-    if (!userEmail || !propertyData)
+    if (!userEmail || !propertyData) {
       return res.status(400).json({ error: "Brak danych wejściowych." });
+    }
 
-    /* 🌐 Dane z Serper.dev */
-    const liveData = await getLiveMarketData(propertyData.location || "");
+    const live = await getLiveMarketData(propertyData.location || "");
 
-    /* 🧠 PROMPT dla modelu */
-    const messages = [
+    const input = [
       {
         role: "system",
         content:
           systemPrompt +
-          "\nTRYB: STRICT_REPORT_MODE — wygeneruj pełny raport 9000–15000 znaków. Zero zgadywania. Wykorzystuj tylko dane od użytkownika i z Serper.dev. Nie twórz żadnych liczb samodzielnie.\nDANE RYNKOWE:\n" +
-          liveData,
+          "\nTryb: RAPORT PDF – 9000–15000 znaków. Zero zmyślania.\nDANE RYNKOWE:\n" +
+          live
       },
-      { role: "user", content: JSON.stringify(propertyData) },
+      { role: "user", content: JSON.stringify(propertyData) }
     ];
 
-    /* 🔥 Generowanie tekstu raportu */
     const ai = await openai.responses.create({
-      model: "gpt-4.1",
-      input: messages,
-      max_output_tokens: 15000,
-      temperature: 0.4,
+      model: "gpt-5.1",
+      input,
+      temperature: 0.35,
+      max_output_tokens: 15000
     });
 
     let report =
       ai.output_text ||
       ai.output?.[0]?.content?.[0]?.text ||
-      "Brak treści od modelu.";
+      "Brak treści.";
 
-    /* Czyszczenie */
-    report = report
-      .replace(/[\\#*_`~]/g, "")
-      .replace(/\n{3,}/g, "\n\n");
+    report = report.replace(/[\\#*_`~]/g, "").replace(/\n{3,}/g, "\n\n");
 
-    /* 📄 Tworzenie PDF */
+    /* PDF */
     const pdfPath = path.join("/tmp", `DomAdvisor-${Date.now()}.pdf`);
     const doc = new PDFDocument({ margin: 50, size: "A4" });
+
+    const font = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
+    if (fs.existsSync(font)) doc.font(font);
+
     const stream = fs.createWriteStream(pdfPath);
-
-    const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
-    if (fs.existsSync(fontPath)) doc.font(fontPath);
-
     doc.pipe(stream);
 
     doc.fontSize(22).text("DomAdvisor – Raport Ekspercki", { align: "center" });
     doc.moveDown(1);
 
-    doc.fontSize(12).text(report, {
-      align: "justify",
-      lineGap: 5,
-    });
+    doc.fontSize(12).text(report, { align: "justify", lineGap: 5 });
 
     doc.end();
-    await new Promise((r) => stream.on("finish", r));
+    await new Promise((resolve) => stream.on("finish", resolve));
 
-    /* ✉️ Wysyłka e-mail */
+    /* EMAIL */
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
       secure: true,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
+      auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
     });
 
     await transporter.sendMail({
       from: `DomAdvisor <${process.env.MAIL_USER}>`,
       to: userEmail,
-      subject: "Twój Raport Ekspercki DomAdvisor",
-      text: "W załączniku znajduje się raport PDF.",
-      attachments: [{ filename: "Raport.pdf", path: pdfPath }],
+      subject: "Raport Ekspercki",
+      text: "W załączniku Twój raport DomAdvisor.",
+      attachments: [{ filename: "Raport.pdf", path: pdfPath }]
     });
 
     fs.unlinkSync(pdfPath);
 
     res.json({ success: true, message: "Raport wysłany." });
   } catch (err) {
-    console.error("❌ Raport PDF error:", err);
+    console.error("PDF error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-/* =========================================================
-   🧪 Test Serper.dev
-   ========================================================= */
-app.get("/api/test-serper", async (req, res) => {
-  const data = await getLiveMarketData("Poznań Jeżyce");
-  res.setHeader("Content-Type", "text/plain; charset=utf-8");
-  res.send(data);
-});
-
-/* =========================================================
-   ROOT
-   ========================================================= */
+/* ========================================================= */
 app.get("/", (req, res) => {
-  res.send("DomAdvisor backend v5.1 działa poprawnie.");
+  res.send("DomAdvisor backend 5.1 działa.");
 });
 
-/* =========================================================
-   START
-   ========================================================= */
+/* START SERVERA */
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`DomAdvisor v5.1 działa na porcie ${PORT}`);
-});
+app.listen(PORT, "0.0.0.0", () =>
+  console.log(`DomAdvisor start: port ${PORT}`)
+);
