@@ -29,8 +29,17 @@ async function getLiveMarketData(location) {
       },
     });
 
-    const results = response.data.organic?.map((r) => r.snippet).join("\n") || "";
-    return results || "Brak danych z sieci.";
+   const organic = response.data.organic || [];
+let formattedResults = "";
+
+organic.forEach((r, i) => {
+  formattedResults += `\n${i + 1}. ${r.title || "Brak tytułu"}\n${r.snippet || ""}\nŹródło: ${r.link || "brak linku"}\n`;
+});
+
+console.log("🔗 ŹRÓDŁA WYNIKÓW:", organic.map(r => r.link));
+
+return formattedResults || "Brak danych z sieci.";
+
   } catch (error) {
     console.error("❌ Błąd pobierania danych rynkowych:", error.message);
     return "Nie udało się pobrać danych rynkowych.";
@@ -272,3 +281,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
+
