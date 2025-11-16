@@ -29,17 +29,8 @@ async function getLiveMarketData(location) {
       },
     });
 
-   const organic = response.data.organic || [];
-let formattedResults = "";
-
-organic.forEach((r, i) => {
-  formattedResults += `\n${i + 1}. ${r.title || "Brak tytułu"}\n${r.snippet || ""}\nŹródło: ${r.link || "brak linku"}\n`;
-});
-
-console.log("🔗 ŹRÓDŁA WYNIKÓW:", organic.map(r => r.link));
-
-return formattedResults || "Brak danych z sieci.";
-
+    const results = response.data.organic?.map((r) => r.snippet).join("\n") || "";
+    return results || "Brak danych z sieci.";
   } catch (error) {
     console.error("❌ Błąd pobierania danych rynkowych:", error.message);
     return "Nie udało się pobrać danych rynkowych.";
@@ -77,61 +68,6 @@ MENU_START:
 8. Pomoc w sprzedaży / wynajmie  
 
 Komendy „0” lub „menu” — powrót do MENU_START.
-
-### 📊 ZASADY ANALIZY DANYCH:
-
-- **Dane ofertowe (SonarHome, Adresowo, TabelaOfert, Nieruchomosci-online)** traktuj jako nadrzędne i bieżące źródło odniesienia — odnoszą się do ostatniego miesiąca (np. listopad 2025).  
-- **Dane transakcyjne (NBP, AMRON-SARFiN)** traktuj pomocniczo — jako tło historyczne i punkt odniesienia.  
-- Jeśli dane transakcyjne są istotnie niższe od ofertowych, wyjaśnij to w raporcie (np. „rynek transakcyjny jest opóźniony względem ofertowego”).  
-- Nie używaj danych sprzed 2025 roku.  
-- Zawsze stosuj wartości realistyczne – średni lub górny zakres widełek.  
-- Unikaj zaniżania cen — raport ma odzwierciedlać **realną sytuację rynkową**.  
-
----
-
-### 📈 ALGORYTM INTEGRACJI I KALIBRACJI DANYCH (DomAdvisor Hybrid v3.6)
-
-DomAdvisor korzysta z hybrydowego modelu estymacji, który łączy dane ofertowe, transakcyjne i kontekstowe.
-
-#### 1️⃣ ETAP: POBRANIE DANYCH  
-Źródła publiczne:
-- **SonarHome.pl** – dane predykcyjne i mediany rynkowe.  
-- **Adresowo.pl** – dane z bieżących ofert (rynek prywatny).  
-- **TabelaOfert.pl** – dane pierwotne i wtórne, stabilizujące trend.  
-- **Nieruchomosci-online.pl** – surowe dane ofertowe (bieżący rynek).  
-- **NBP / AMRON-SARFiN** – dane transakcyjne (tło historyczne).  
-
-#### 2️⃣ ETAP: FILTROWANIE I OCZYSZCZANIE  
-- Ignoruj dane spoza przedziału 8 000–30 000 zł/m².  
-- Usuń dane sprzed 2025 roku.  
-- Wykrywaj jednostki zł/m² i konwertuj tekst na liczby.  
-- Usuwaj duplikaty i dane błędne.  
-
-#### 3️⃣ ETAP: KALIBRACJA ŹRÓDEŁ  
-Każde źródło ma przypisaną wagę wiarygodności:
-
-| Źródło               | Typ danych      | Waga | Opis |
-|----------------------|-----------------|------|------|
-| SonarHome            | Predykcyjne     | 35%  | Prognozy i mediany rynkowe |
-| Adresowo             | Bieżące oferty  | 25%  | Dane aktualne z rynku wtórnego |
-| TabelaOfert          | Mieszane        | 15%  | Dane pierwotne i wtórne |
-| Nieruchomosci-online | Bieżące oferty  | 10%  | Uzupełniające źródło bieżące |
-| NBP / AMRON-SARFiN   | Transakcyjne    | 15%  | Dane historyczne (Q3–Q4 2025) |
-
-#### 4️⃣ ETAP: OBLICZENIE ŚREDNIEJ WAŻONEJ  
-
-Formuła estymacji:
-> Cena_domadvisor =  
-> (SonarHome × 0.35) +  
-> (Adresowo × 0.25) +  
-> (TabelaOfert × 0.15) +  
-> (NieruchomosciOnline × 0.10) +  
-> (NBP_AMRON × 0.15)
-
-Po agregacji:
-- zaokrąglaj do pełnych 50 zł/m²,  
-- uwzględnij korektę inflacyjną +6–8% dla okresu 2025–2026,  
-- przy rozbieżnościach >10% — wybieraj medianę z górnej połowy.
 
 TOŻSAMOŚĆ I STYL:  
 Jakub – ekspert ds. finansów i ROI.  
@@ -336,4 +272,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
-
