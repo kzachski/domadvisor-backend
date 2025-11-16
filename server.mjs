@@ -1,6 +1,6 @@
 // =========================================================
-// 🏠 DOMADVISOR BACKEND (Render Ready, v3.6.4 Final Hybrid)
-// GPT-5 (Responses API) + Serper.dev + SMTP (home.pl) + PDF
+// 🏠 DOMADVISOR PREMIUM BACKEND (Render Ready)
+// GPT-4.1 + SMTP (home.pl) + PDF + Serper.dev (live data)
 // =========================================================
 
 import express from "express";
@@ -17,26 +17,20 @@ import axios from "axios";
 dotenv.config();
 
 // =========================================================
-// 🌐 FUNKCJA: Pobieranie danych rynkowych z Serper.dev
+// 🌐 FUNKCJA: Pobieranie danych rynkowych (Serper.dev)
 // =========================================================
 async function getLiveMarketData(location) {
   try {
     const response = await axios.get("https://google.serper.dev/search", {
       headers: { "X-API-KEY": process.env.SERPER_API_KEY },
       params: {
-        q: `średnie ceny mieszkań ${location} listopad 2025 site:sonarhome.pl OR site:adresowo.pl OR site:tabelaofert.pl OR site:nieruchomosci-online.pl`,
-        num: 8,
+        q: `średnie ceny mieszkań ${location} listopad 2025 site:sonarhome.pl OR site:otodom.pl`,
+        num: 5,
       },
     });
 
-    const organic = response.data.organic || [];
-    let formattedResults = "";
-    organic.forEach((r, i) => {
-      formattedResults += `\n${i + 1}. ${r.title || "Brak tytułu"}\n${r.snippet || ""}\nŹródło: ${r.link || "brak linku"}\n`;
-    });
-
-    console.log("🔗 [Źródła danych online]:", organic.map(r => r.link));
-    return formattedResults || "Brak danych z sieci.";
+    const results = response.data.organic?.map(r => r.snippet).join("\n") || "";
+    return results || "Brak danych z sieci.";
   } catch (error) {
     console.error("❌ Błąd pobierania danych rynkowych:", error.message);
     return "Nie udało się pobrać danych rynkowych.";
@@ -55,34 +49,47 @@ const openai = new OpenAI({
 });
 
 // =========================================================
-// 🧠 SYSTEM PROMPT DOMADVISOR (v3.6.4 Hybrid Public Sources)
+// 🧠 SYSTEM PROMPT DOMADVISOR (v3.4 – stabilne ceny)
 // =========================================================
 const systemPrompt = String.raw`
-DOMADVISOR – SYSTEM PROMPT (v3.6.4 Hybrid Logic)
+DOMADVISOR – SYSTEM PROMPT (v3.4 / 2025–2026 Ready)
 
-🧭 CEL SYSTEMU:
-DomAdvisor to analityczny asystent nieruchomościowy, który łączy dane z wielu publicznych źródeł.  
-Nie udziela rekomendacji inwestycyjnych — przedstawia interpretację danych rynkowych.
+ZACHOWANIE STARTOWE
+Nie komentuj komunikatu powitalnego – zacznij od MENU_START.
 
-Źródła nadrzędne (bieżące):
-- SonarHome.pl
-- Adresowo.pl
-- TabelaOfert.pl
-- Nieruchomosci-online.pl
+MENU_START:
+1. Analiza nieruchomości na sprzedaż
+2. Analiza nieruchomości na wynajem
+3. Ocena mieszkania pod flipa
+4. Rekomendacja rynkowa dla inwestora
+5. Optymalizacja ogłoszenia sprzedaży
+6. Wycena nieruchomości i analiza trendu
+7. Analiza lokalnego rynku
+8. Pomoc w sprzedaży / wynajmie
 
-Źródła pomocnicze (historyczne):
-- NBP
-- AMRON-SARFiN
-- Dane publiczne
+Komendy „0” lub „menu” — powrót do MENU_START.
 
-Algorytm (wagowy model hybrydowy):
-Cena_domadvisor = (SonarHome × 0.35) + (Adresowo × 0.25) + (TabelaOfert × 0.15) + (NieruchomosciOnline × 0.10) + (NBP/AMRON × 0.15)
+TOŻSAMOŚĆ I STYL:
+Jakub – ekspert ds. finansów i ROI.
+Magdalena – architekt i home-stager.
+Styl profesjonalny, spokojny, język ekspercki bez ozdobników.
 
-Wyniki zaokrąglaj do pełnych 50 zł/m² i uwzględniaj korektę inflacyjną 6–8%.
+ŹRÓDŁA:
+NBP, Otodom Analytics, SonarHome, AMRON-SARFiN.
+Używaj najnowszych danych (Q4 2025 lub Q1 2026).
+Nie interpoluj danych sprzed 2025 roku.
 
-⚖️ Klauzula:
-Analiza DomAdvisor ma charakter informacyjny i interpretacyjny.
-Nie stanowi rekomendacji inwestycyjnej ani porady finansowej.
+KALIBRACJA I WIARYGODNOŚĆ:
+Jeśli dane z sieci (np. SonarHome, Otodom) są rozbieżne lub niepełne,
+kalibruj średnie ceny m² w oparciu o:
+- mediany z rynku wtórnego Otodom,
+- dane AMRON-SARFiN,
+- lokalne wskaźniki NBP,
+- oraz korektę inflacyjną 2024→2025 (+6–8%).
+
+Zawsze unikaj zaniżania cen — przy braku pełnych danych stosuj średni lub górny zakres widełek.
+Dla Gdańska, Warszawy, Wrocławia i Krakowa przyjmuj wartości referencyjne zbliżone
+do realnych cen transakcyjnych (z dokładnością ±5%).
 `;
 
 // =========================================================
@@ -91,8 +98,13 @@ Nie stanowi rekomendacji inwestycyjnej ani porady finansowej.
 app.post("/api/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
+
     const messages = [
-      { role: "system", content: systemPrompt },
+      {
+        role: "system",
+        content: `${systemPrompt}
+Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, skrócona wersja czatowa).`,
+      },
       ...(history || []),
       { role: "user", content: message },
     ];
@@ -100,10 +112,13 @@ app.post("/api/chat", async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages,
-      max_completion_tokens: 13000, // ✅ poprawne pole
+      temperature: 0.7,
+      max_tokens: 13000,
     });
 
-    res.json({ success: true, response: completion.choices[0].message.content });
+    const response = completion.choices[0].message.content;
+    console.log("✅ Raport czatowy wygenerowany — długość:", response.length);
+    res.json({ success: true, response });
   } catch (error) {
     console.error("❌ Błąd API czatu:", error);
     res.json({ success: false, error: error.message });
@@ -111,7 +126,7 @@ app.post("/api/chat", async (req, res) => {
 });
 
 // =========================================================
-// 📧 ENDPOINT: RAPORT PDF + wysyłka e-mail
+// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail, struktura premium)
 // =========================================================
 app.post("/api/send-report", async (req, res) => {
   try {
@@ -119,51 +134,98 @@ app.post("/api/send-report", async (req, res) => {
     if (!userEmail || !propertyData)
       return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
 
+    // 🌐 Dane rynkowe z Serper.dev
     const liveData = await getLiveMarketData(propertyData);
+
+    // 📅 Ustal aktualny kwartał
     const now = new Date();
     const month = now.toLocaleString("pl-PL", { month: "long" });
     const year = now.getFullYear();
     const quarter = Math.ceil((now.getMonth() + 1) / 3);
     const currentQuarter = `Q${quarter} ${year}`;
 
-    console.log(`📊 Generowanie raportu (${currentQuarter}) dla ${userEmail}`);
+    console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
 
+    // 🧠 PROMPT premium (pełna struktura raportu)
     const messages = [
       {
         role: "system",
-        content: `${systemPrompt}
+        content: `
+Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium). 
+Przygotowujesz profesjonalny raport ekspercki dotyczący nieruchomości w Polsce, 
+łącząc dane ofertowe (Otodom, SonarHome) oraz dane transakcyjne (NBP, AMRON-SARFiN).
 
 📡 DANE RYNKOWE ONLINE:
 ${liveData}
 
-Tryb: Raport Ekspercki PDF – generuj szczegółową analizę (9000–12000 znaków).`,
+📊 ZASADY ANALIZY DANYCH:
+- **Dane ofertowe (Otodom Analytics, SonarHome)** traktuj jako nadrzędne i bieżące źródło odniesienia — zawsze odnoszą się do ostatniego miesiąca (np. listopad 2025).
+- **Dane transakcyjne (NBP, AMRON-SARFiN)** wykorzystuj pomocniczo — jako tło historyczne i punkt odniesienia dla oceny trendu.
+- Jeśli dane transakcyjne są istotnie niższe niż ofertowe — wyjaśnij to w treści raportu (np. "dane transakcyjne z Q3 2025 pokazują jeszcze niższe poziomy, jednak obecne oferty rynkowe wzrosły o X%").
+- Nigdy nie używaj danych sprzed 2025 roku ani nie interpoluj z błędnych wartości archiwalnych.
+- Zawsze unikaj zaniżania cen — przy braku pełnych danych stosuj średni lub górny zakres widełek rynkowych (nie dolny).
+
+📅 AKTUALNOŚĆ DANYCH:
+Dziś jest ${month} ${year}. Raport DomAdvisor musi odnosić się do okresu ${currentQuarter} (najnowszy dostępny kwartał). 
+Nie wolno używać wcześniejszych dat (np. 2024, Q1 2025). 
+Jeśli dane kwartalne nie są jeszcze publikowane — interpoluj z poprzedniego kwartału, ale raport oznacz jako "${currentQuarter}".
+
+🎯 CEL:
+Stwórz pełny raport ekspercki klasy premium (9000–12000 znaków) dla przesłanej nieruchomości. 
+Zachowaj strukturę i ton eksperta.
+
+📊 STRUKTURA:
+1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
+2️⃣ ANALIZA FINANSOWA (Jakub)  
+3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
+4️⃣ RYZYKA  
+5️⃣ REKOMENDACJA KOŃCOWA  
+6️⃣ PLAN 30 / 60 / 90 DNI  
+7️⃣ ŹRÓDŁA DANYCH i UWAGA METODOLOGICZNA
+
+STYL:
+Ton ekspercki, rzeczowy, bez ozdobników.
+Każda sekcja powinna zawierać odniesienie: "Okres odniesienia: ${currentQuarter} (najnowsze dane NBP i Otodom Analytics)".
+`,
       },
-      { role: "user", content: propertyData },
+      {
+        role: "user",
+        content: `${propertyData}
+
+Upewnij się, że raport DomAdvisor zawiera wszystkie powyższe sekcje w pełnym rozwinięciu (minimum kilka akapitów każda).
+Jeśli model skraca tekst, generuj go dalej aż do pełnego zakończenia.`,
+      },
     ];
 
+    // 🧠 Generowanie raportu
     const completion = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4.1",
       messages,
-      max_completion_tokens: 15000, // ✅ poprawne pole
+      temperature: 0.6,
+      max_tokens: 13000,
     });
 
-    const reportText = completion.choices[0].message.content || "";
-    const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
+    let reportText = completion.choices[0].message.content || "";
 
+    // 📄 PDF
+    const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
     const doc = new PDFDocument({ margin: 50, size: "A4" });
-    const fontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
+    const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
     if (fs.existsSync(fontPath)) doc.font(fontPath);
 
     doc.pipe(fs.createWriteStream(pdfPath));
     doc.fontSize(22).text("DomAdvisor – Raport Ekspercki", { align: "center" });
-    doc.moveDown(0.5);
+    doc.moveDown(0.6);
     doc.fontSize(10).fillColor("#555").text(`DomAdvisor Premium • ${month} ${year}`, { align: "center" });
     doc.moveDown(1);
-    doc.fontSize(12).fillColor("#000").text(reportText.replace(/[#*_`]/g, ""), { align: "justify", lineGap: 6 });
+
+    const cleanText = reportText.replace(/[#*_`]/g, "").replace(/\n{3,}/g, "\n\n");
+    doc.fontSize(12).fillColor("#000").text(cleanText, { align: "justify", lineGap: 6 });
     doc.end();
 
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2000));
 
+    // ✉️ E-mail
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
@@ -175,7 +237,7 @@ Tryb: Raport Ekspercki PDF – generuj szczegółową analizę (9000–12000 zna
       from: `"DomAdvisor" <${process.env.MAIL_USER}>`,
       to: userEmail,
       subject: `Twój Raport Ekspercki DomAdvisor – ${month} ${year}`,
-      text: `Dziękujemy za skorzystanie z DomAdvisor Premium. W załączniku znajdziesz raport (${currentQuarter}).`,
+      text: `Dziękujemy za skorzystanie z DomAdvisor Premium. W załączniku znajdziesz szczegółowy raport (${currentQuarter}).`,
       attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }],
     });
 
@@ -203,7 +265,7 @@ app.get("/api/test-serper", async (req, res) => {
 });
 
 // ============================================================
-// 🌍 ROOT ENDPOINT
+// 🌍 ROOT ENDPOINT (test backendu)
 // ============================================================
 app.get("/", (req, res) => {
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -215,5 +277,5 @@ app.get("/", (req, res) => {
 // ============================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ DomAdvisor v3.6.4 działa na porcie ${PORT}`);
+  console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
 });
