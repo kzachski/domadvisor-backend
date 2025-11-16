@@ -1,6 +1,6 @@
 // =========================================================
-// 🏠 DOMADVISOR PREMIUM BACKEND (Render Ready, v3.6.1 Stable)
-// GPT-5 + SMTP (home.pl) + PDF + Serper.dev (live data, public sources)
+// 🏠 DOMADVISOR BACKEND (Render Ready, v3.6.4 Final Hybrid)
+// GPT-5 (Responses API) + Serper.dev + SMTP (home.pl) + PDF
 // =========================================================
 
 import express from "express";
@@ -17,7 +17,7 @@ import axios from "axios";
 dotenv.config();
 
 // =========================================================
-// 🌐 FUNKCJA: Pobieranie danych rynkowych (Serper.dev)
+// 🌐 FUNKCJA: Pobieranie danych rynkowych z Serper.dev
 // =========================================================
 async function getLiveMarketData(location) {
   try {
@@ -25,21 +25,18 @@ async function getLiveMarketData(location) {
       headers: { "X-API-KEY": process.env.SERPER_API_KEY },
       params: {
         q: `średnie ceny mieszkań ${location} listopad 2025 site:sonarhome.pl OR site:adresowo.pl OR site:tabelaofert.pl OR site:nieruchomosci-online.pl`,
-        num: 5,
+        num: 8,
       },
     });
 
     const organic = response.data.organic || [];
-let formattedResults = "";
+    let formattedResults = "";
+    organic.forEach((r, i) => {
+      formattedResults += `\n${i + 1}. ${r.title || "Brak tytułu"}\n${r.snippet || ""}\nŹródło: ${r.link || "brak linku"}\n`;
+    });
 
-organic.forEach((r, i) => {
-  formattedResults += `\n${i + 1}. ${r.title || "Brak tytułu"}\n${r.snippet || ""}\nŹródło: ${r.link || "brak linku"}\n`;
-});
-
-console.log("🔗 ŹRÓDŁA WYNIKÓW:", organic.map(r => r.link));
-
-return formattedResults || "Brak danych z sieci.";
-
+    console.log("🔗 [Źródła danych online]:", organic.map(r => r.link));
+    return formattedResults || "Brak danych z sieci.";
   } catch (error) {
     console.error("❌ Błąd pobierania danych rynkowych:", error.message);
     return "Nie udało się pobrać danych rynkowych.";
@@ -58,77 +55,34 @@ const openai = new OpenAI({
 });
 
 // =========================================================
-// 🧠 SYSTEM PROMPT DOMADVISOR (v3.6.1 – public data only, safe placeholders)
+// 🧠 SYSTEM PROMPT DOMADVISOR (v3.6.4 Hybrid Public Sources)
 // =========================================================
 const systemPrompt = String.raw`
-DOMADVISOR – SYSTEM PROMPT (v3.6.1 / 2025–2026 Ready)
+DOMADVISOR – SYSTEM PROMPT (v3.6.4 Hybrid Logic)
 
-ZACHOWANIE STARTOWE  
-Nie komentuj komunikatu powitalnego – zacznij od MENU_START.
+🧭 CEL SYSTEMU:
+DomAdvisor to analityczny asystent nieruchomościowy, który łączy dane z wielu publicznych źródeł.  
+Nie udziela rekomendacji inwestycyjnych — przedstawia interpretację danych rynkowych.
 
-MENU_START:  
-1. Analiza nieruchomości na sprzedaż  
-2. Analiza nieruchomości na wynajem  
-3. Ocena mieszkania pod flipa  
-4. Rekomendacja rynkowa dla inwestora  
-5. Optymalizacja ogłoszenia sprzedaży  
-6. Wycena nieruchomości i analiza trendu  
-7. Analiza lokalnego rynku  
-8. Pomoc w sprzedaży / wynajmie  
+Źródła nadrzędne (bieżące):
+- SonarHome.pl
+- Adresowo.pl
+- TabelaOfert.pl
+- Nieruchomosci-online.pl
 
-Komendy „0” lub „menu” — powrót do MENU_START.
+Źródła pomocnicze (historyczne):
+- NBP
+- AMRON-SARFiN
+- Dane publiczne
 
-TOŻSAMOŚĆ I STYL:  
-Jakub – ekspert ds. finansów i ROI.  
-Magdalena – architekt i home-stager.  
-Styl profesjonalny, spokojny, język ekspercki, bez ozdobników.  
-Unikaj języka potocznego i marketingowych zwrotów.
+Algorytm (wagowy model hybrydowy):
+Cena_domadvisor = (SonarHome × 0.35) + (Adresowo × 0.25) + (TabelaOfert × 0.15) + (NieruchomosciOnline × 0.10) + (NBP/AMRON × 0.15)
 
-📊 ŹRÓDŁA I OKRES ANALIZY  
+Wyniki zaokrąglaj do pełnych 50 zł/m² i uwzględniaj korektę inflacyjną 6–8%.
 
-W analizach DomAdvisor korzystaj wyłącznie z **publicznie dostępnych źródeł danych** – bieżących i branżowych:  
-- **SonarHome.pl** – dane ofertowe i modelowe (aktualizowane co 1–2 tygodnie, publiczne)  
-- **Adresowo.pl, TabelaOfert.pl, Nieruchomosci-online.pl** – dane ofertowe z rynku pierwotnego i wtórnego  
-- **NBP (Narodowy Bank Polski)** – dane transakcyjne z Biuletynów Cen Mieszkań (urzędowe, kwartalne)  
-- **AMRON-SARFiN** – raporty branżowe (publicznie dostępne, kwartalne)  
-
-Nie wolno korzystać z danych komercyjnych lub zamkniętych (np. Otodom Analytics).  
-Jeśli dane dla danej dzielnicy nie są publikowane — interpoluj z rynków sąsiednich lub średnich wojewódzkich.  
-
-Każdy raport musi zawierać odniesienie czasowe:  
-„Dane aktualne na [miesiąc, rok], okres analizy: [bieżący kwartał] (najnowszy dostępny kwartał)”.  
-
-📈 KALIBRACJA I WIARYGODNOŚĆ  
-
-Jeśli dane z sieci (np. SonarHome, Adresowo, TabelaOfert) są rozbieżne lub niepełne:  
-- kalibruj średnie ceny m² w oparciu o mediany z rynku wtórnego (SonarHome),  
-- weryfikuj trend na podstawie danych NBP i AMRON-SARFiN,  
-- uwzględnij korektę inflacyjną (2024→2025: +6–8%),  
-- stosuj zakresy ±5% w lokalizacjach dużych miast (Warszawa, Kraków, Wrocław, Gdańsk).  
-
-W razie braku pełnych danych – użyj średniego lub górnego zakresu widełek, nigdy dolnego.  
-
-🎯 CEL SYSTEMU  
-
-DomAdvisor to narzędzie eksperckie łączące dane rynkowe, analizy funkcjonalne i kontekst inwestycyjny.  
-Każdy raport ma charakter **analityczno-interpretacyjny**, nie stanowi rekomendacji inwestycyjnej ani wyceny rzeczoznawczej.  
-
-Raporty powinny zachować strukturę:  
-1️⃣ STRESZCZENIE OFERTY / DANE OGÓLNE  
-2️⃣ ANALIZA FINANSOWA (Jakub)  
-3️⃣ ANALIZA FUNKCJONALNO-ESTETYCZNA (Magdalena)  
-4️⃣ RYZYKA  
-5️⃣ REKOMENDACJA KOŃCOWA  
-6️⃣ PLAN 30 / 60 / 90 DNI  
-7️⃣ ŹRÓDŁA DANYCH I UWAGA METODOLOGICZNA  
-
-Każdy punkt ma zawierać co najmniej kilka akapitów.  
-Unikaj skrótów, uproszczeń i powtórzeń. Raport ma mieć charakter pełnego opracowania eksperckiego klasy premium.
-
-STYL:  
-Ton ekspercki, klarowny i spójny.  
-Nie stosuj kolokwializmów ani języka promocyjnego.  
-Wypowiedź powinna przypominać raport finansowo-analityczny przygotowany przez specjalistę ds. nieruchomości.  
+⚖️ Klauzula:
+Analiza DomAdvisor ma charakter informacyjny i interpretacyjny.
+Nie stanowi rekomendacji inwestycyjnej ani porady finansowej.
 `;
 
 // =========================================================
@@ -137,13 +91,8 @@ Wypowiedź powinna przypominać raport finansowo-analityczny przygotowany przez 
 app.post("/api/chat", async (req, res) => {
   try {
     const { message, history } = req.body;
-
     const messages = [
-      {
-        role: "system",
-        content: `${systemPrompt}
-Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, skrócona wersja czatowa).`,
-      },
+      { role: "system", content: systemPrompt },
       ...(history || []),
       { role: "user", content: message },
     ];
@@ -151,13 +100,10 @@ Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, s
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages,
-      temperature: 0.7,
-      max_tokens: 13000,
+      max_completion_tokens: 13000, // ✅ poprawne pole
     });
 
-    const response = completion.choices[0].message.content;
-    console.log("✅ Raport czatowy wygenerowany — długość:", response.length);
-    res.json({ success: true, response });
+    res.json({ success: true, response: completion.choices[0].message.content });
   } catch (error) {
     console.error("❌ Błąd API czatu:", error);
     res.json({ success: false, error: error.message });
@@ -165,7 +111,7 @@ Tryb: DomAdvisor Premium – generuj raport ekspercki (ok. 1000–1500 słów, s
 });
 
 // =========================================================
-// 📧 ENDPOINT: PEŁNY RAPORT (PDF + wysyłka e-mail)
+// 📧 ENDPOINT: RAPORT PDF + wysyłka e-mail
 // =========================================================
 app.post("/api/send-report", async (req, res) => {
   try {
@@ -173,19 +119,15 @@ app.post("/api/send-report", async (req, res) => {
     if (!userEmail || !propertyData)
       return res.status(400).json({ error: "Brak e-maila lub danych ogłoszenia." });
 
-    // 🌐 Dane rynkowe (online)
     const liveData = await getLiveMarketData(propertyData);
-
-    // 📅 Data i okres
     const now = new Date();
     const month = now.toLocaleString("pl-PL", { month: "long" });
     const year = now.getFullYear();
     const quarter = Math.ceil((now.getMonth() + 1) / 3);
     const currentQuarter = `Q${quarter} ${year}`;
 
-    console.log(`📊 Generowanie raportu (${currentQuarter}) dla: ${userEmail}`);
+    console.log(`📊 Generowanie raportu (${currentQuarter}) dla ${userEmail}`);
 
-    // 🧠 PROMPT PREMIUM
     const messages = [
       {
         role: "system",
@@ -194,40 +136,34 @@ app.post("/api/send-report", async (req, res) => {
 📡 DANE RYNKOWE ONLINE:
 ${liveData}
 
-🎯 Tryb: DomAdvisor Premium — generuj pełny raport ekspercki (9000–12000 znaków, PDF Premium). 
-Uwzględnij wszystkie sekcje raportu oraz wnioski logiczne, bez skracania treści.`,
+Tryb: Raport Ekspercki PDF – generuj szczegółową analizę (9000–12000 znaków).`,
       },
-      { role: "user", content: `${propertyData}` },
+      { role: "user", content: propertyData },
     ];
 
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages,
-      temperature: 0.65,
-      max_tokens: 15000,
+      max_completion_tokens: 15000, // ✅ poprawne pole
     });
 
-    let reportText = completion.choices[0].message.content || "";
-
-    // 📄 PDF
+    const reportText = completion.choices[0].message.content || "";
     const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
+
     const doc = new PDFDocument({ margin: 50, size: "A4" });
-    const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
+    const fontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
     if (fs.existsSync(fontPath)) doc.font(fontPath);
 
     doc.pipe(fs.createWriteStream(pdfPath));
     doc.fontSize(22).text("DomAdvisor – Raport Ekspercki", { align: "center" });
-    doc.moveDown(0.6);
+    doc.moveDown(0.5);
     doc.fontSize(10).fillColor("#555").text(`DomAdvisor Premium • ${month} ${year}`, { align: "center" });
     doc.moveDown(1);
-
-    const cleanText = reportText.replace(/[#*_`]/g, "").replace(/\n{3,}/g, "\n\n");
-    doc.fontSize(12).fillColor("#000").text(cleanText, { align: "justify", lineGap: 6 });
+    doc.fontSize(12).fillColor("#000").text(reportText.replace(/[#*_`]/g, ""), { align: "justify", lineGap: 6 });
     doc.end();
 
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 2000));
 
-    // ✉️ E-mail
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
@@ -279,6 +215,5 @@ app.get("/", (req, res) => {
 // ============================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ DomAdvisor działa na porcie ${PORT}`);
+  console.log(`✅ DomAdvisor v3.6.4 działa na porcie ${PORT}`);
 });
-
