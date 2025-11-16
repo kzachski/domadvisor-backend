@@ -1,7 +1,7 @@
 {
   "name": "domadvisor-backend",
-  "version": "3.6.4",
-  "description": "DomAdvisor backend API – analiza hybrydowa rynku nieruchomości (SonarHome, Adresowo, TabelaOfert) z integracją GPT-5.",
+  "version": "3.6.5",
+  "description": "DomAdvisor backend API – analiza rynku nieruchomości z GPT-4o i raportami PDF.",
   "main": "server.mjs",
   "type": "module",
   "scripts": {
@@ -13,7 +13,9 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "nodemailer": "^6.9.8",
-    "openai": "^4.28.4"
+    "openai": "^4.28.4",
+    "pdfkit": "^0.15.0",
+    "body-parser": "^1.20.2"
   },
   "engines": {
     "node": ">=18.0.0"
