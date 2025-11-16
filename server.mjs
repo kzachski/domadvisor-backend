@@ -186,4 +186,101 @@ app.post("/api/chat", async (req, res) => {
 // =========================================================
 app.post("/api/send-report", async (req, res) => {
   try {
-    const { userEmail, propertyData } =
+    const { userEmail, propertyData } = req.body;
+    if (!userEmail || !propertyData)
+      return res.status(400).json({ error: "Brak danych." });
+
+    const liveData = await getLiveMarketData(propertyData.location || "");
+
+    const messages = [
+      {
+        role: "system",
+        content:
+          baseSystemPrompt +
+          "\n\nDANE RYNKOWE ONLINE:\n" +
+          liveData +
+          "\n\n" +
+          strictReportTemplate
+      },
+      { role: "user", content: JSON.stringify(propertyData) }
+    ];
+
+    const r = await openai.responses.create({
+      model: "gpt-4o",
+      input: messages,
+      max_output_tokens: 15000,
+      temperature: 0.5
+    });
+
+    let report =
+      r.output_text ||
+      r.output?.[0]?.content?.[0]?.text ||
+      "Brak treści.";
+
+    report = report.replace(/[\\#*_`~]/g, "").replace(/\n{3,}/g, "\n\n");
+
+    // PDF
+    const pdfPath = path.join("/tmp", `DomAdvisor-${Date.now()}.pdf`);
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+
+    const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
+    if (fs.existsSync(fontPath)) doc.font(fontPath);
+
+    const stream = fs.createWriteStream(pdfPath);
+    doc.pipe(stream);
+
+    doc.fontSize(22).text("DomAdvisor – Raport Ekspercki", { align: "center" });
+    doc.moveDown(1);
+    doc.fontSize(12).text(report, { align: "justify", lineGap: 6 });
+
+    doc.end();
+    await new Promise((r) => stream.on("finish", r));
+
+    // Email
+    const mailer = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: 465,
+      secure: true,
+      auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
+    });
+
+    await mailer.sendMail({
+      from: `DomAdvisor <${process.env.MAIL_USER}>`,
+      to: userEmail,
+      subject: "Raport Ekspercki DomAdvisor",
+      text: "W załączniku znajduje się Twój raport ekspercki.",
+      attachments: [{ filename: "Raport.pdf", path: pdfPath }]
+    });
+
+    fs.unlinkSync(pdfPath);
+
+    res.json({ success: true, message: "Raport wysłany." });
+  } catch (err) {
+    console.error("PDF error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =========================================================
+// 🧪 TEST SERPER
+// =========================================================
+app.get("/api/test-serper", async (req, res) => {
+  const data = await getLiveMarketData("Poznań Jeżyce");
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.send(data);
+});
+
+// =========================================================
+// ROOT
+// =========================================================
+app.get("/", (req, res) => {
+  res.send("DomAdvisor backend (v3.6 REBUILD) działa poprawnie.");
+});
+
+// =========================================================
+// START SERVERA
+// =========================================================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`DomAdvisor działa na porcie ${PORT}`);
+});
