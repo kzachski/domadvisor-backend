@@ -1,6 +1,6 @@
 // =============================================================
-// 🏠 DomAdvisor Premium Backend v3.6.2 (GPT-4o Optimized)
-// Single-file backend — ready for Render.com deployment
+// 🏠 DomAdvisor Premium Backend v3.6.6 (GPT-4o • NEW OpenAI API)
+// Single-file backend — fully compatible with Render + Node 22
 // =============================================================
 
 import express from "express";
@@ -24,7 +24,7 @@ async function getLiveMarketData(location) {
     const response = await axios.get("https://google.serper.dev/search", {
       headers: { "X-API-KEY": process.env.SERPER_API_KEY },
       params: {
-        q: `średnie ceny mieszkań ${location} ceny m2 analiza site:sonarhome.pl OR site:adresowo.pl OR site:tabelaofert.pl OR site:nieruchomosci-online.pl`,
+        q: `średnie ceny mieszkań ${location} analiza ceny m2 site:sonarhome.pl OR site:adresowo.pl OR site:tabelaofert.pl OR site:nieruchomosci-online.pl`,
         num: 5
       }
     });
@@ -37,16 +37,16 @@ async function getLiveMarketData(location) {
     });
 
     return formatted || "Brak danych";
-  } catch (e) {
+  } catch {
     return "Nie udało się pobrać danych rynkowych.";
   }
 }
 
 // =============================================================
-// 🧠 SYSTEM PROMPT — DomAdvisor Premium
+// 🧠 SYSTEM PROMPT (DomAdvisor Premium)
 // =============================================================
 const systemPrompt = String.raw`
-DOMADVISOR – SYSTEM PROMPT v3.6.2 (GPT-4o Optimized)
+DOMADVISOR – SYSTEM PROMPT v3.6.6 (GPT-4o)
 
 MENU_START:
 1. Analiza nieruchomości na sprzedaż
@@ -57,30 +57,16 @@ MENU_START:
 6. Wycena + trend
 7. Analiza lokalnego rynku
 8. Pomoc w sprzedaży / wynajmie
-Komenda „0” lub „menu” – powrót do MENU_START.
 
 Styl:
 - ekspercki
 - analityczny
 - precyzyjny
 - zero marketingu
-- zero ozdobników
 
-Role:
-- Jakub – analityk finansowy
-- Magdalena – architekt i home-stager
-
-ŹRÓDŁA:
-- SonarHome.pl
-- Adresowo.pl
-- TabelaOfert.pl
-- Nieruchomosci-online.pl
-- NBP (Biuletyny Cen)
-- AMRON-SARFiN
-
-Zakazy:
-- brak danych komercyjnych
-- brak fikcyjnych danych
+Źródła:
+- SonarHome, Adresowo, TabelaOfert, Nieruchomosci-online
+- NBP, AMRON-SARFiN
 
 Struktura raportu:
 1. Streszczenie
@@ -93,7 +79,7 @@ Struktura raportu:
 `;
 
 // =============================================================
-// ⚙️ Express + OpenAI
+// ⚙️ Express + OpenAI NEW API
 // =============================================================
 const app = express();
 app.use(cors());
@@ -102,7 +88,7 @@ app.use(bodyParser.json({ limit: "3mb" }));
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // =============================================================
-// 💬 /api/chat
+// 💬 /api/chat — Skrócony raport (chat mode)
 // =============================================================
 app.post("/api/chat", async (req, res) => {
   try {
@@ -114,28 +100,30 @@ app.post("/api/chat", async (req, res) => {
       { role: "user", content: message }
     ];
 
-    const completion = await openai.chat.completions.create({
+    const response = await openai.responses.create({
       model: "gpt-4o",
-      messages,
+      input: messages,
       temperature: 0.6,
       max_output_tokens: 1500
     });
 
-    res.json({ success: true, response: completion.choices[0].message.content });
-  } catch (error) {
-    res.json({ success: false, error: error.message });
+    res.json({ success: true, response: response.output_text });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
   }
 });
 
 // =============================================================
-// 📧 /api/send-report – pełny PDF premium
+// 📧 /api/send-report — Pełny PDF Premium
 // =============================================================
 app.post("/api/send-report", async (req, res) => {
   try {
     const { userEmail, propertyData } = req.body;
-    if (!userEmail || !propertyData) return res.status(400).json({ error: "Brak danych" });
 
-    const liveData = await getLiveMarketData(propertyData.location || "lokalizacja nieznana");
+    if (!userEmail || !propertyData)
+      return res.status(400).json({ error: "Brak danych wejściowych." });
+
+    const liveData = await getLiveMarketData(propertyData.location || "nieznana lokalizacja");
 
     const now = new Date();
     const month = now.toLocaleString("pl-PL", { month: "long" });
@@ -146,7 +134,7 @@ app.post("/api/send-report", async (req, res) => {
         role: "system",
         content: `${systemPrompt}
 
-DANE RYNKOWE ONLINE:
+📡 DANE RYNKOWE ONLINE:
 ${liveData}
 
 Tryb: Pełny raport PDF (9000–12000 znaków).`
@@ -154,44 +142,47 @@ Tryb: Pełny raport PDF (9000–12000 znaków).`
       { role: "user", content: JSON.stringify(propertyData) }
     ];
 
-    const completion = await openai.chat.completions.create({
+    const response = await openai.responses.create({
       model: "gpt-4o",
-      messages,
+      input: messages,
       temperature: 0.55,
       max_output_tokens: 8000
     });
 
-    let report = completion.choices[0].message.content || "Brak treści";
+    let report = response.output_text || "Brak treści raportu.";
 
-    // PDF ===========================================================
+    // =============================================================
+    // PDF GENERATION
+    // =============================================================
     const pdfPath = path.join("/tmp", `DomAdvisor-Raport-${Date.now()}.pdf`);
     const doc = new PDFDocument({ margin: 50, size: "A4" });
-
-    const fontPath = path.join(process.cwd(), "fonts", "NotoSans-Regular.ttf");
-    if (fs.existsSync(fontPath)) doc.font(fontPath);
-
     const stream = fs.createWriteStream(pdfPath);
     doc.pipe(stream);
 
+    // Header
     doc.fontSize(22).text("DomAdvisor – Raport Ekspercki", { align: "center" });
     doc.moveDown(0.5);
     doc.fontSize(11).fillColor("#555")
       .text(`Wersja Premium • ${month} ${year}`, { align: "center" });
     doc.moveDown(1);
 
+    // Cleanup markdown
     report = report
       .replace(/\n###? (.*)/g, (_, t) => `\n\n${t.toUpperCase()}\n`)
       .replace(/[#*_`]/g, "");
 
-    doc.fontSize(12).fillColor("#000").text(report, {
+    doc.fillColor("#000").fontSize(12).text(report, {
       align: "justify",
       lineGap: 6
     });
 
     doc.end();
+
     await new Promise((resolve) => stream.on("finish", resolve));
 
-    // E-mail =========================================================
+    // =============================================================
+    // SEND EMAIL
+    // =============================================================
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: 465,
@@ -203,16 +194,17 @@ Tryb: Pełny raport PDF (9000–12000 znaków).`
       from: `DomAdvisor <${process.env.MAIL_USER}>`,
       to: userEmail,
       subject: `Raport Ekspercki DomAdvisor – ${month} ${year}`,
-      text: "Dziękujemy za skorzystanie z DomAdvisor Premium. Raport w załączniku.",
+      text: "Dziękujemy za skorzystanie z DomAdvisor Premium. Raport PDF znajduje się w załączniku.",
       attachments: [{ filename: "DomAdvisor-Raport.pdf", path: pdfPath }]
     });
 
     fs.unlinkSync(pdfPath);
-    res.json({ success: true, message: "Raport wysłany." });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+    res.json({ success: true, message: "Raport wysłany na mail." });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -224,14 +216,14 @@ app.get("/api/test-serper", async (req, res) => {
 });
 
 // =============================================================
-// 🌍 Root
+// 🌍 Root Endpoint
 // =============================================================
 app.get("/", (req, res) => {
   res.send("DomAdvisor backend działa poprawnie.");
 });
 
 // =============================================================
-// 🚀 Start
+// 🚀 Start Server
 // =============================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`DomAdvisor działa na porcie ${PORT}`));
